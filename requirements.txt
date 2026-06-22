@@ -1,7 +1,10 @@
-tensorflow>=2.15
-pandas>=2.0
-numpy>=1.24
-scikit-learn>=1.3
-streamlit>=1.30
+# Pinned to the proven course env (conda `deep-learning`, Python 3.11).
+# Exact pins for cross-machine reproducibility and a stable live demo (AUDIT M6).
+tensorflow==2.21.0
+keras==3.14.1
+pandas==3.0.3
+numpy==2.4.6
+scikit-learn==1.9.0
 matplotlib>=3.7
 plotly>=5.18
+streamlit>=1.30
