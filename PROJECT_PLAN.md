@@ -22,7 +22,7 @@ Feedback loop is demoed on **movies** (TV rejection updates the taste vector dir
 
 **Reverie** — a sequential recommender. It reads a viewer's watch history, learns
 their evolving taste, and recommends what to watch next across **both movies and TV
-shows**, served through an interactive Streamlit dashboard. The system also **learns
+shows**, served through an interactive React dashboard (model served by a FastAPI API). The system also **learns
 from being wrong**: when the user rejects a recommendation, it corrects in real time.
 
 ### Business case (rubric: 20%)
@@ -156,7 +156,7 @@ re-rank existing model output, so they add demo impact without extra training co
 
 ## 4. Frontend + integration (rubric: 50% combined)
 
-### Streamlit dashboard (vibe coding allowed/encouraged)
+### React dashboard (vibe coding allowed/encouraged)
 
 - Build / load a watch history (search + add titles, sample personas, or import the
   real Letterboxd/Netflix profile), with a rating slider per title.
@@ -168,7 +168,7 @@ re-rank existing model output, so they add demo impact without extra training co
 
 - Training exports: `model.keras`, movie index maps, genre matrix, TV catalog
   embeddings (to `/artifacts`).
-- Streamlit loads artifacts once at startup; `recommend(history) -> top_n` runs live
+- FastAPI loads artifacts once at startup; `recommend(history) -> top_n` runs live
   inference on each request. No precomputed/hardcoded predictions (rubric penalizes it).
 
 ---
@@ -194,7 +194,8 @@ GroupProject/
     evaluate.py             # ranking metrics + baselines
     recommend.py            # inference: next-movie + content-NN over movies + TV
   app/
-    streamlit_app.py        # the dashboard
+    api.py                  # FastAPI service (/health, /catalog, /recommend)
+  web/                      # React + Vite + Tailwind + shadcn/ui frontend
   artifacts/                # trained model + encoders + catalog embeddings (gitignored)
   deck/                     # final presentation (PDF)
 ```
@@ -210,7 +211,7 @@ Everyone must speak in the presentation, so each owns a slide segment too.
 2. **Model** — dual-head architecture, training, tuning, export. Deck: architecture justification.
 3. **Evaluation & baselines** — ranking metrics, popularity/recency baselines,
    overfitting analysis. Deck: results + why the RNN wins.
-4. **Frontend** — Streamlit dashboard, UX, feedback reactions, taste-drift viz,
+4. **Frontend** — React dashboard, UX, feedback reactions, taste-drift viz,
    serendipity dial. Deck: live demo.
 5. **Integration + personal data + deck owner** — Letterboxd/Netflix parsing + title
    resolution, TV catalog, wire model→app, README, business case. Deck: business value + close.
@@ -235,7 +236,7 @@ Everyone must speak in the presentation, so each owns a slide segment too.
   beat the baselines. Keep tuning shallow.
 - **Phase 5 — Personal data + catalog (days 6-9, parallel):** parse Letterboxd +
   Netflix, resolve titles, ingest `imdb_tvshows.csv`, build content embeddings.
-- **Phase 6 — Frontend + creative (days 7-12, parallel):** Streamlit app, feedback
+- **Phase 6 — Frontend + creative (days 7-12, parallel):** React app + FastAPI, feedback
   re-rank, taste-drift viz, serendipity dial, "why this", real-time integration hardening.
 - **Phase 7 — Deck + rehearsal (days 11-14):** build deck, time the 15-min run, record
   a backup demo, rehearse demo + Q&A, freeze the repo.
@@ -260,4 +261,4 @@ Everyone must speak in the presentation, so each owns a slide segment too.
 ## 9. Tech stack
 
 - Python, TensorFlow/Keras (matches the course notebooks), pandas/numpy, scikit-learn
-  (metrics/baselines/nearest-neighbor), Streamlit (frontend), GitHub (repo + README).
+  (metrics/baselines/nearest-neighbor), React + Vite + Tailwind (frontend), FastAPI (serving), GitHub (repo + README).

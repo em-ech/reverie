@@ -16,7 +16,7 @@ genres ────────────┘                                  
 imdb_tvshows.csv ─▶ shared-genre catalog (+TF-IDF) ────────────────────▶ recommend(history)
 Letterboxd / Netflix export ─▶ map to catalog ─▶ history ───────────────▶        │
                                                                                   ▼
-                                                                      Streamlit dashboard
+                                                                      React dashboard (FastAPI)
 ```
 
 ---
@@ -144,13 +144,13 @@ the minimum trained history length so the demo never feeds out-of-distribution s
 
 ---
 
-## 7. Serving (Streamlit) `[M6]`
+## 7. Serving (FastAPI + React) `[M6]`
 
 - Pin exact `tensorflow==X.Y.Z`; one Python version across the team.
 - Save **weights + architecture-in-code** (not full-model `.keras`) for version robustness;
   provide a "rebuild artifacts on this machine" path.
-- `@st.cache_resource` loads model + encoders + catalog once; **warm with a dummy
-  `recommend([])` at startup** so cold start never hits the grader.
+- FastAPI loads model + encoders + catalog once at startup and **warms it with a dummy
+  `recommend([])`** so cold start never hits the grader. React frontend calls the API.
 - Designate **one training machine + one demo machine**; the frontend owner consumes
   artifacts, never trains. Recorded backup demo is the real fallback, not a checkbox.
 - `recommend(history)` (in `src/recommend.py`) is the **only** inference path; notebooks
