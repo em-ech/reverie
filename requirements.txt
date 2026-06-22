@@ -6,5 +6,7 @@ pandas==3.0.3
 numpy==2.4.6
 scikit-learn==1.9.0
 matplotlib>=3.7
-plotly>=5.18
-streamlit>=1.30
+scipy>=1.11
+# Serving (React frontend talks to this API; see web/)
+fastapi>=0.110
+uvicorn[standard]>=0.29

@@ -1,4 +1,4 @@
-"""MovieLens data preparation for the NextWatch sequential recommender.
+"""MovieLens data preparation for the Reverie sequential recommender.
 
 Implements the audit-critical contract (see ARCHITECTURE.md / AUDIT.md):
   * deterministic ordering by (timestamp, movieId)            [L1]

@@ -1,4 +1,4 @@
-# NextWatch — Architecture Audit
+# Reverie — Architecture Audit
 
 Adversarial pre-build review of `ARCHITECTURE.md` + `PROJECT_PLAN.md`, run across four
 independent lenses (data/leakage, model/training, evaluation, scope/integration) before

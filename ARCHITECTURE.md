@@ -1,4 +1,4 @@
-# NextWatch — Architecture Design (v2, post-audit)
+# Reverie — Architecture Design (v2, post-audit)
 
 Concrete design for the model, data pipeline, recommendation logic, evaluation, and
 serving. Revised to fold in every mitigation from `AUDIT.md`. Audit tags like `[C1]`

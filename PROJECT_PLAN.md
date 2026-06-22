@@ -20,7 +20,7 @@ Feedback loop is demoed on **movies** (TV rejection updates the taste vector dir
 
 ## 1. The product
 
-**NextWatch** — a sequential recommender. It reads a viewer's watch history, learns
+**Reverie** — a sequential recommender. It reads a viewer's watch history, learns
 their evolving taste, and recommends what to watch next across **both movies and TV
 shows**, served through an interactive Streamlit dashboard. The system also **learns
 from being wrong**: when the user rejects a recommendation, it corrects in real time.

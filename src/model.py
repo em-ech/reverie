@@ -1,4 +1,4 @@
-"""GRU next-item model for NextWatch.
+"""GRU next-item model for Reverie.
 
 Single softmax head over the movie catalog (the derived taste vector is computed
 downstream, not a trained head). No recurrent_dropout so the fast cuDNN/Metal
@@ -41,7 +41,7 @@ def build_gru(
     x = layers.Dropout(head_dropout)(x)
     out = layers.Dense(n_items + 1, activation="softmax", name="next_movie")(x)
 
-    model = keras.Model(inp, out, name="nextwatch_gru")
+    model = keras.Model(inp, out, name="reverie_gru")
     model.compile(
         optimizer=keras.optimizers.Adam(1e-3),
         loss="sparse_categorical_crossentropy",
@@ -103,6 +103,6 @@ def build_hybrid_gru(
     x = layers.Dropout(head_dropout)(x)
     out = layers.Dense(n_items + 1, activation="softmax", name="next_movie")(x)
 
-    model = keras.Model([ids_in, rat_in], out, name="nextwatch_hybrid")
+    model = keras.Model([ids_in, rat_in], out, name="reverie_hybrid")
     model.compile(optimizer=keras.optimizers.Adam(1e-3), loss="sparse_categorical_crossentropy")
     return model

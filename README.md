@@ -1,4 +1,4 @@
-# NextWatch — Sequential Movie & TV Recommender
+# Reverie — Sequential Movie & TV Recommender
 
 A deep learning MVP that reads a viewer's watch history, learns their evolving taste,
 and recommends what to watch next across **both movies and TV shows**. When the user
@@ -69,9 +69,16 @@ pip install -r requirements.txt
 # 1. Train the model (writes artifacts/)
 python -m src.train
 
-# 2. Launch the dashboard
-streamlit run app/streamlit_app.py
+# 2. Start the API (FastAPI, serves recommend())
+uvicorn app.api:app --port 8000
+
+# 3. Start the React frontend (separate terminal)
+cd web && npm install && npm run dev   # http://localhost:5173
 ```
+
+The frontend (`web/`, React + Vite + Tailwind + shadcn/ui) calls the API's
+`/recommend` and `/catalog` endpoints. For a single-process demo, build the
+frontend (`npm run build`) and have FastAPI serve the static bundle.
 
 ## Privacy
 

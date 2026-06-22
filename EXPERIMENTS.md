@@ -1,4 +1,4 @@
-# NextWatch — Experiment Protocol
+# Reverie — Experiment Protocol
 
 The experiments that produce the project's technical-depth evidence (rubric: tuning,
 architecture justification, overfitting prevention). Scoped down from the audit's
