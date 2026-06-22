@@ -43,8 +43,15 @@ deck/        final presentation
 No datasets are committed to this repo. The training data is public; the personal
 demo data is private and intentionally excluded.
 
-- **Training:** [MovieLens `ml-latest-small`](https://grouplens.org/datasets/movielens/)
-  — download and unzip into `data/ml-latest-small/`.
+- **Training (primary):** [MovieLens `ml-1m`](https://grouplens.org/datasets/movielens/1m/)
+  — download and unzip into `data/ml-1m/` (~6 MB, 1M ratings, 6,040 users). This is the
+  primary corpus; `ml-latest-small` is a fallback only (see `ARCHITECTURE.md` / `AUDIT.md`).
+
+  ```bash
+  curl -O https://files.grouplens.org/datasets/movielens/ml-1m.zip
+  unzip ml-1m.zip -d data/
+  ```
+
 - **TV catalog:** an IMDb TV-shows CSV (title, genres, description) in `data/`.
 - **Personal demo (optional):** a user's own Letterboxd and/or Netflix export. These
   contain private information and are **never** committed (see `.gitignore`).

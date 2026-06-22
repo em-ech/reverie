@@ -3,9 +3,18 @@
 **Course:** Deep Learning (IE University)
 **Group:** 5 members
 **Deliverable:** Functional MVP (GitHub repo) + 15-min pitch with live demo (PDF deck)
-**Scope reality:** ~2 weeks, trained on local machines → lean MVP. Train on MovieLens,
-recommend TV + movies via a content bridge, demo on real personal data. Tuning kept
-shallow; stretch goals are explicitly optional.
+**Scope reality:** ~2 weeks, trained on local machines → lean MVP. Train on MovieLens
+(**`ml-1m` primary** after the audit; `ml-latest-small` fallback), recommend TV + movies
+via a content bridge, demo on real personal data. Tuning kept shallow; stretch goals optional.
+
+**Companion docs:** [`ARCHITECTURE.md`](ARCHITECTURE.md) (authoritative model/data/serving
+spec), [`AUDIT.md`](AUDIT.md) (pre-build adversarial review + mitigations),
+[`EXPERIMENTS.md`](EXPERIMENTS.md) (runnable experiment protocol).
+
+**Post-audit cut list (protect the core 50% = model + integration):** TMDb API → hand-built
+title CSV; taste-drift animation → static before/after radar; serendipity dial → stretch;
+persistent learning → stretch; the 8-axis sweep → the focused matrix in `EXPERIMENTS.md`.
+Feedback loop is demoed on **movies** (TV rejection updates the taste vector directly).
 
 ---
 
@@ -75,29 +84,35 @@ models (standard session-based / sequential recommendation, GRU4Rec family).
 - Split (leave-one-out, standard for sequential rec): per user, last item = test,
   second-to-last = validation, the rest = train.
 
-### Model — dual head
+### Model — single head + derived taste vector
+
+> Superseded the earlier "dual head" after the audit. The authoritative model spec is
+> [`ARCHITECTURE.md`](ARCHITECTURE.md); this is the summary.
 
 ```
-sequence ─▶ [movie emb ⊕ genre ⊕ rating] ─▶ GRU/LSTM ─▶ Dropout ─▶ hidden state
-                                                              ├─▶ Head A: Dense softmax over movie catalog  (next-movie)
-                                                              └─▶ Head B: taste/content vector (genre profile)
+sequence ─▶ [movie emb ⊕ genre ⊕ rating] ─▶ GRU ─▶ Dropout ─▶ Dense softmax (next movie)
+                                                       │
+                                                       └─▶ taste vector = Σ P(movie)·genre(movie)  (DERIVED, not trained)
 ```
 
-- **Head A (next-movie softmax)** → quantitative evaluation and the movie recommender.
-- **Head B (taste vector)** → score _any_ candidate title (movie or TV from
-  `imdb_tvshows.csv`) by similarity → enables **TV + movie** recommendations and
-  fixes the personal-data title-mapping problem (match on content, not exact title).
-- Overfitting prevention (called out in the rubric): dropout + recurrent dropout,
-  early stopping on val loss, L2 on embeddings, masking of padded steps. Plot train
-  vs. val curves as evidence.
+- **Softmax head** → quantitative evaluation and the movie recommender.
+- **Derived taste vector** (mean-centered, top-K) → scores _any_ candidate title (movie or
+  TV from `imdb_tvshows.csv`) by genre cosine → enables **TV + movie** recommendations and
+  fixes title-mapping (match on content, not exact title). No separately-trained head.
+- Overfitting prevention: dropout (no `recurrent_dropout` — keeps the cuDNN path), early
+  stopping (val loss → val NDCG@10 in Phase 3), L2 on embeddings, masking. Train/val curves
+  as evidence.
 
 ### Evaluation
 
-- Primary (movie side, quantitative): **Recall@10 (Hit Rate@10), NDCG@10, MRR**;
-  top-1 next-item accuracy as a familiar sanity check.
-- **Baselines to beat:** most-popular, and most-recent-genre. Show the RNN beats
-  both → proves the architecture earns its complexity.
-- TV side: qualitative demonstration only (stated as a known limitation).
+> Full protocol, baselines, and significance testing in [`EXPERIMENTS.md`](EXPERIMENTS.md).
+
+- Metrics: **HR@10 + MRR** (under leave-one-out, Recall@10 ≡ HR@10; report the relationship
+  openly), top-1 as a sanity check.
+- **Baselines to beat (all required):** most-popular, most-recent-genre, **and item-kNN**.
+- Bootstrap CIs + paired Wilcoxon over users, ≥3 seeds, test opened once.
+- TV side: qualitative demo **plus** a small quantitative content-bridge proxy on the
+  personal Netflix TV history (illustrative, N small).
 
 ---
 
