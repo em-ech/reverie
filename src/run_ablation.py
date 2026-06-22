@@ -46,8 +46,8 @@ def main() -> None:
         model.fit(
             [ds.X_train, ds.X_train_rat], ds.y_train,
             validation_data=([X_val_ids, X_val_rat], y_val),
-            epochs=15, batch_size=256, verbose=2,
-            callbacks=[keras.callbacks.EarlyStopping("val_loss", patience=2, restore_best_weights=True)],
+            epochs=60, batch_size=256, verbose=2,
+            callbacks=[keras.callbacks.EarlyStopping("val_loss", patience=10, restore_best_weights=True)],
         )
         scores = model.predict([X_val_ids, X_val_rat], batch_size=512, verbose=0)
         ranks = ranks_from_scores(scores, ds.val_target, ds.seen_val)

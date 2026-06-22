@@ -103,15 +103,19 @@ the regularizers (dropout/L2/early-stopping) shown as an ablation. `[H3]`
 
 ## Results so far (ml-1m, seed 42, validation, max_windows_per_user=30)
 
+Training config aligned to the professor's method (Sessions 5-6): EarlyStopping on
+val_loss, patience=10, epochs=60 (early stopping ends training, not the cap). Under this,
+the headline GRU stops ~epoch 30 and improves over the earlier patience=2/epochs=15 run.
+
 **E0 gate — PASS.** GRU (id-only) HR@10 0.257 vs most-popular 0.042; paired MRR
 diff +0.099, 95% CI [+0.093, +0.105]. Random floor 0.0029.
 
-**Headline baselines (validation).** RNN beats all three with non-overlapping CIs and
-Wilcoxon p≈0:
+**Headline baselines (validation, aligned settings).** RNN beats all three with
+non-overlapping CIs and Wilcoxon p≈0:
 
 | Model            | Val HR@10 [95% CI]    | Val MRR [95% CI]      | vs RNN p |
 | ---------------- | --------------------- | --------------------- | -------- |
-| RNN (GRU)        | 0.2570 [0.245, 0.268] | 0.1203 [0.114, 0.127] | —        |
+| RNN (GRU)        | 0.2641 [0.252, 0.275] | 0.1252 [0.119, 0.132] | —        |
 | item-kNN         | 0.0759 [0.069, 0.083] | 0.0352 [0.032, 0.038] | ~0       |
 | recent-genre pop | 0.0446 [0.039, 0.050] | 0.0225 [0.020, 0.025] | ~0       |
 | most-popular     | 0.0419 [0.037, 0.047] | 0.0215 [0.019, 0.024] | ~0       |

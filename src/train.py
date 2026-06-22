@@ -40,8 +40,8 @@ def main() -> None:
     y_val = np.asarray(ds.val_target, dtype=np.int32)
     model.fit(
         [ds.X_train, ds.X_train_rat], ds.y_train,
-        validation_data=(X_val, y_val), epochs=15, batch_size=256, verbose=2,
-        callbacks=[keras.callbacks.EarlyStopping("val_loss", patience=2, restore_best_weights=True)],
+        validation_data=(X_val, y_val), epochs=60, batch_size=256, verbose=2,
+        callbacks=[keras.callbacks.EarlyStopping("val_loss", patience=10, restore_best_weights=True)],
     )
 
     # Popularity-weighted "average viewer" genre profile, for mean-centering. [H2]
