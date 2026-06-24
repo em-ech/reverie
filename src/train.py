@@ -23,9 +23,11 @@ from src import track
 RATINGS = "data/ml-1m/ratings.dat"
 ART = "artifacts"
 SEED = 42
-MAX_LEN = 20    # E3: best val HR@10 at L=20 (0.2779) > L=50 (0.2739) > L=10 (0.2707)
-EMBED_DIM = 32  # E4: TBD
-RNN_UNITS = 128 # E4: TBD
+# E3 winner: L=20 (0.2779) > L=50 (0.2739) > L=10 (0.2707)
+MAX_LEN = 20
+# E4 winner: d32/u64 smallest within 0.005 of best d64/u128 (0.2782)
+EMBED_DIM = 32
+RNN_UNITS = 64
 
 
 def main() -> None:

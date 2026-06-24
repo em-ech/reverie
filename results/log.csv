@@ -9,3 +9,9 @@ date,experiment,config,HR@10,MRR,NDCG@10,notes
 2026-06-24 22:59,E3 max_len=10,L10/d32/u128/p10/e60,0.2707,0.1333,0.1540,E3 history length sweep
 2026-06-24 23:09,E3 max_len=20,L20/d32/u128/p10/e60,0.2779,0.1338,0.1561,E3 history length sweep
 2026-06-24 23:30,E3 max_len=50,L50/d32/u128/p10/e60,0.2739,0.1344,0.1554,E3 history length sweep
+2026-06-24 23:52,E4 d16/u64,L20/d16/u64/p10/e60,0.2725,0.1311,0.1524,"E4 capacity sweep, gap=0.3734"
+2026-06-25 00:01,E4 d16/u128,L20/d16/u128/p10/e60,0.2704,0.1292,0.1505,"E4 capacity sweep, gap=0.4426"
+2026-06-25 00:10,E4 d32/u64,L20/d32/u64/p10/e60,0.2740,0.1345,0.1555,"E4 capacity sweep, gap=0.4739"
+2026-06-25 00:19,E4 d32/u128,L20/d32/u128/p10/e60,0.2779,0.1338,0.1561,"E4 capacity sweep, gap=0.5214"
+2026-06-25 00:28,E4 d64/u128,L20/d64/u128/p10/e60,0.2782,0.1346,0.1567,"E4 capacity sweep, gap=0.5146"
+2026-06-25 00:39,E4 d64/u256,L20/d64/u256/p10/e60,0.2687,0.1295,0.1505,"E4 capacity sweep, gap=0.5494"

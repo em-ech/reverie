@@ -114,9 +114,25 @@ validation HR@10. Also tracks the train-vs-val loss gap to spot overfitting.
 
 **Decision rule:** if d=32 / units=128 ties with d=64 / units=256, keep the smaller one.
 
-- [ ] `src/run_e4.py` written
-- [ ] E4 run completed
-- [ ] Best size noted: `embed_dim = ___`, `rnn_units = ___`
+- [x] `src/run_e4.py` written
+- [x] E4 run completed
+- [x] Best size noted: `embed_dim = 32`, `rnn_units = 64`
+
+embed	units	HR@10	Gap	Verdict
+
+16	64	0.2725	0.37	Too small, slow to converge (ep 44)
+
+16	128	0.2704	0.44	More memory doesn't help tiny embeddings
+
+32	64	0.2740	0.47	Decision winner — smallest within 0.005 of best
+
+32	128	0.2779	0.52	Good but 2× the params of d32/u64 for +0.004 HR@10
+
+64	128	0.2782	0.51	Raw best — but 4× params of d32/u64
+
+64	256	0.2687	0.55	Clear overfitting — too big, stops at epoch 7
+
+
 
 ---
 
