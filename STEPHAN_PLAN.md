@@ -44,7 +44,7 @@ val: HR@10=0.2735  MRR=0.1348  NDCG@10=0.1556
 Artifacts written to artifacts/
 ```
 
-- [ ] Step 0 complete — `artifacts/` folder has all 6 files
+- [x] Step 0 complete — `artifacts/` folder has all 6 files
 
 ---
 
@@ -72,9 +72,21 @@ Evaluates each on validation HR@10, MRR, NDCG@10 and prints a comparison table.
 
 **Decision rule:** if L=20 is within ~0.5% HR@10 of L=50, go with L=20 (simpler model).
 
-- [ ] `src/run_e3.py` written
-- [ ] E3 run completed
-- [ ] Best `max_len` value noted: `max_len = ___`
+- [x] `src/run_e3.py` written
+- [x] E3 run completed
+- [x] Best `max_len` value noted: `max_len = 20`
+
+E3 Results — What they mean
+
+max_len	HR@10	Verdict
+
+10	0.2707	Too short — missing context
+
+20	0.2779	Winner — best AND faster
+
+50	0.2739	Longer doesn't help
+
+The key insight for the professor: L=20 beats L=50. The GRU already captures everything useful in the last 20 movies — looking further back adds noise, not signal. This is also a good real-world property: people's taste is driven by recent watching, not what they saw 5 years ago.
 
 ---
 
