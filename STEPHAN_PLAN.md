@@ -157,9 +157,9 @@ so this is literally one argument change. Compares on validation HR@10 and train
 
 **Decision rule:** pick whichever has higher val HR@10. If tied within 0.3%, pick GRU (fewer params, faster).
 
-- [ ] `src/run_e5.py` written
-- [ ] E5 run completed
-- [ ] Winner noted: `cell = "___"`
+- [x] `src/run_e5.py` written
+- [x] E5 run completed
+- [x] Winner noted: `cell = "gru"` — tied with LSTM (diff=0.001), GRU wins on fewer params
 
 ---
 
