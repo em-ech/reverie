@@ -14,7 +14,6 @@ load_tv_catalog(csv_path, genre_names)
 
 SPANISH_TO_ENGLISH
     Dict of known Spanish Netflix localizations → canonical English titles.
-    The 20-30 entries below are hand-curated; extend as needed for the demo.
 
 build_tv_genre_matrix(df, genre_names, imdb_to_ml)
     Build the (n_shows, n_genres) float32 matrix from the parsed catalog.
@@ -33,12 +32,9 @@ import pandas as pd
 
 # ---------------------------------------------------------------------------
 # Spanish Netflix title → English canonical title
-# Hand-curated for the demo (extend if you add more demo shows).
-# These are the most common Spanish-localised names on Netflix Spain.
 # ---------------------------------------------------------------------------
 
 SPANISH_TO_ENGLISH: dict[str, str] = {
-    # Drama / thriller
     "La Casa de Papel":         "Money Heist",
     "Élite":                    "Elite",
     "Vis a Vis":                "Locked Up",
@@ -49,13 +45,11 @@ SPANISH_TO_ENGLISH: dict[str, str] = {
     "Gran Hotel":               "Grand Hotel",
     "El Internado":             "The Boarding School",
     "Fariña":                   "Cocaine Coast",
-    # Sci-fi / fantasy
     "El Embarcadero":           "The Pier",
     "Hierro":                   "Iron",
     "Vivir sin Permiso":        "Living Without Permission",
     "La Línea Invisible":       "The Invisible Line",
-    # International shows with Spanish titles on Netflix ES
-    "Stranger Things":          "Stranger Things",      # same in Spanish
+    "Stranger Things":          "Stranger Things",
     "The Crown":                "The Crown",
     "Narcos":                   "Narcos",
     "Merlí: Sapere Aude":       "Merlí: Sapere Aude",
@@ -75,8 +69,6 @@ SPANISH_TO_ENGLISH: dict[str, str] = {
 
 # ---------------------------------------------------------------------------
 # IMDb genre string → MovieLens genre(s)
-# The IMDb genre vocabulary is broader; map to the 18-genre ML vocab.
-# A single IMDb tag may map to multiple ML genres (list).
 # ---------------------------------------------------------------------------
 
 IMDB_TO_ML: dict[str, list[str]] = {
@@ -121,23 +113,7 @@ def load_tv_catalog(
     imdb_to_ml: dict[str, list[str]] | None = None,
     min_genres: int = 1,
 ) -> tuple[list[str], np.ndarray, dict[str, str]]:
-    """Load the IMDB TV show catalog and build the genre bridge matrix.
-
-    Parameters
-    ----------
-    csv_path    : path to imdb_tvshows.csv
-    genre_names : the 18-genre ML vocabulary from the trained Dataset
-                  (Dataset.genre_names — must match what the model was trained on)
-    imdb_to_ml  : override the default IMDB→ML genre map
-    min_genres  : drop shows with fewer than this many mapped ML genres
-
-    Returns
-    -------
-    tv_titles        : list[str] of show titles (length N)
-    tv_genre_matrix  : float32 array (N, len(genre_names)) — multi-hot
-    tv_title_map     : dict[str, str] Spanish→English (SPANISH_TO_ENGLISH extended
-                       with any exact-match Spanish titles already in the catalog)
-    """
+    """Load the IMDB TV show catalog and build the genre bridge matrix."""
     p = Path(csv_path)
     if not p.exists():
         raise FileNotFoundError(
@@ -146,10 +122,8 @@ def load_tv_catalog(
         )
 
     mapping = imdb_to_ml if imdb_to_ml is not None else IMDB_TO_ML
-
     df = _load_csv(p)
 
-    # Build genre index (MovieLens vocabulary)
     gidx = {g: i for i, g in enumerate(genre_names)}
     n_genres = len(genre_names)
 
@@ -158,13 +132,12 @@ def load_tv_catalog(
     unmapped_genres: set[str] = set()
 
     for _, row in df.iterrows():
-        title     = str(row.get("title", row.get("Title", ""))).strip()
-        genre_str = str(row.get("genres", row.get("Genres", ""))).strip()
+        title     = str(row.get("Title", row.get("title", ""))).strip()
+        genre_str = str(row.get("Genres", row.get("genres", ""))).strip()
 
         if not title or title.lower() in ("nan", "none", ""):
             continue
 
-        # Parse genre string: "Drama,Thriller" or "Drama | Thriller" or "Drama/Thriller"
         raw_genres = re.split(r"[,|/;]+", genre_str)
         raw_genres = [g.strip() for g in raw_genres if g.strip()]
 
@@ -186,7 +159,6 @@ def load_tv_catalog(
 
     tv_genre_matrix = np.stack(vectors, axis=0) if vectors else np.zeros((0, n_genres), dtype=np.float32)
 
-    # Coverage report
     total_in_file = len(df)
     coverage = 100 * len(titles) / max(total_in_file, 1)
     print(
@@ -206,15 +178,11 @@ def load_tv_catalog(
     if unmapped_genres:
         print(f"[tv_catalog] Unmapped genre tags (not blocking): {sorted(unmapped_genres)}")
 
-    # Build the title map: start from SPANISH_TO_ENGLISH, then add any title
-    # in the catalog that is already in Spanish (exact match in the dict)
     tv_title_map = dict(SPANISH_TO_ENGLISH)
-
     return titles, tv_genre_matrix, tv_title_map
 
 
 def get_title_index(tv_titles: list[str]) -> dict[str, int]:
-    """Return {lower_title: row_index} for fast lookup."""
     return {t.lower(): i for i, t in enumerate(tv_titles)}
 
 
@@ -225,10 +193,6 @@ def score_show(
     taste: np.ndarray,
     genre_marginal: np.ndarray,
 ) -> float | None:
-    """Cosine similarity between *taste* and a named show's centered genre vector.
-
-    Returns None if the title is not found in the catalog.
-    """
     idx_map = get_title_index(tv_titles)
     idx = idx_map.get(title.lower())
     if idx is None:
@@ -240,30 +204,67 @@ def score_show(
 
 
 # ---------------------------------------------------------------------------
-# Internal: flexible CSV parser
+# Internal: CSV parser for the specific imdb_tvshows.csv format
+# The file wraps each row in outer quotes and uses "" for internal quoting,
+# with trailing ;;; on every line.
 # ---------------------------------------------------------------------------
 
 def _load_csv(p: Path) -> pd.DataFrame:
-    """Try several common layouts for imdb_tvshows.csv."""
-    # Attempt 1: standard comma-separated
-    try:
-        df = pd.read_csv(p, encoding="utf-8")
-        if "title" in df.columns or "Title" in df.columns:
-            return df
-    except Exception:
-        pass
+    with open(p, encoding="utf-8", errors="replace") as fh:
+        raw = fh.read()
 
-    # Attempt 2: tab-separated
-    try:
-        df = pd.read_csv(p, sep="\t", encoding="utf-8")
-        if "title" in df.columns or "Title" in df.columns:
-            return df
-    except Exception:
-        pass
+    # Strip trailing semicolons from line endings
+    cleaned = re.sub(r";+\r?\n", "\n", raw).strip()
+    cleaned = re.sub(r";+$", "", cleaned)
 
-    # Attempt 3: latin-1 encoding
-    df = pd.read_csv(p, encoding="latin-1")
-    return df
+    records = []
+    for line in cleaned.split("\n")[1:]:   # skip header row
+        line = line.strip()
+        if not line:
+            continue
+        # Remove outer wrapping quotes
+        if line.startswith('"') and line.endswith('"'):
+            line = line[1:-1]
+
+        # Extract all ""-quoted fields (About, Genres, Actors use this escaping)
+        quoted_fields = re.findall(r'""([^""]+)""', line)
+
+        # Extract title: everything before the first "" block
+        title_match = re.match(r'^(.+?),""', line)
+        if title_match:
+            title = title_match.group(1).strip()
+            # If unquoted About text leaked in (contains comma), keep only first segment
+            if "," in title:
+                title = title.split(",")[0].strip()
+        else:
+            title = line.split(",")[0].strip()
+
+        # Identify genres among the quoted fields:
+        # Genres = short field, no sentence punctuation, all tokens ≤ 2 words
+        genres = None
+        for qf in quoted_fields:
+            if "." not in qf and len(qf) < 80 and not any(c.isdigit() for c in qf):
+                words = [w.strip() for w in qf.split(",")]
+                if words and all(len(w.split()) <= 2 for w in words):
+                    genres = qf
+                    break
+
+        if title and genres:
+            records.append({"Title": title, "Genres": genres})
+
+    if len(records) > 100:
+        return pd.DataFrame(records)
+
+    # Fallback: standard pandas
+    for enc in ("utf-8", "latin-1"):
+        try:
+            df = pd.read_csv(p, encoding=enc, engine="python", on_bad_lines="skip")
+            if "Title" in df.columns or "title" in df.columns:
+                return df
+        except Exception:
+            continue
+
+    return pd.DataFrame(records)
 
 
 # ---------------------------------------------------------------------------
@@ -274,10 +275,9 @@ if __name__ == "__main__":
     import argparse, json, sys
 
     ap = argparse.ArgumentParser(description="Smoke-test the TV catalog loader.")
-    ap.add_argument("--csv",        default="data/imdb_tvshows.csv")
-    ap.add_argument("--model_cfg",  default="artifacts/model_config.json",
-                    help="model_config.json to get genre_names")
-    ap.add_argument("--top", type=int, default=10, help="Show top-N titles")
+    ap.add_argument("--csv",       default="data/imdb_tvshows.csv")
+    ap.add_argument("--model_cfg", default="artifacts/model_config.json")
+    ap.add_argument("--top", type=int, default=10)
     args = ap.parse_args()
 
     cfg_path = Path(args.model_cfg)
@@ -286,14 +286,13 @@ if __name__ == "__main__":
             cfg = json.load(fh)
         genre_names = cfg["genre_names"]
     else:
-        # Fallback: the standard 18-genre MovieLens vocabulary
         genre_names = [
             "Action", "Adventure", "Animation", "Children's", "Comedy",
             "Crime", "Documentary", "Drama", "Fantasy", "Film-Noir",
             "Horror", "Musical", "Mystery", "Romance", "Sci-Fi",
             "Thriller", "War", "Western",
         ]
-        print(f"[tv_catalog] model_config.json not found; using default 18-genre vocab")
+        print("[tv_catalog] model_config.json not found; using default 18-genre vocab")
 
     titles, matrix, tv_map = load_tv_catalog(args.csv, genre_names)
 
