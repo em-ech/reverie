@@ -161,6 +161,15 @@ so this is literally one argument change. Compares on validation HR@10 and train
 - [x] E5 run completed
 - [x] Winner noted: `cell = "gru"` — tied with LSTM (diff=0.001), GRU wins on fewer params
 
+
+cell       HR@10       MRR   NDCG@10  best_ep  s/epoch
+
+------------------------------------------------------
+
+GRU       0.2740    0.1345    0.1555       37       13 <-- best
+
+LSTM      0.2730    0.1333    0.1544       33       13
+
 ---
 
 ## Step 4 — Lock the config (critical — unblocks Lea and Cecile)
@@ -170,10 +179,10 @@ Collect the winners from E3, E4, E5 and write them down in one place. Update the
 constants at the top of `src/train.py`:
 
 ```python
-MAX_LEN   = ___   # from E3
-EMBED_DIM = ___   # from E4
-RNN_UNITS = ___   # from E4
-CELL      = "___" # from E5
+MAX_LEN   = 20   # from E3
+EMBED_DIM = 32   # from E4
+RNN_UNITS = 64   # from E4
+CELL      = "gru" # from E5
 ```
 
 Tell Lea the locked config so she can prepare the final test script.
@@ -187,38 +196,25 @@ Tell Cecile so she knows exactly what to train and export for the final artifact
 
 **Do NOT open the test set yourself.** Only Lea runs the official test, once, after this step.
 
-- [ ] Winners from E3, E4, E5 collected
-- [ ] `src/train.py` constants updated
+- [x] Winners from E3, E4, E5 collected
+- [x] `src/train.py` constants updated
 - [ ] Lea notified of locked config
 - [ ] Cecile notified of locked config
 
 ---
 
-## Step 5 — Multi-seed validation (3+ seeds)
+## Step 5 — Multi-seed runs (≥3 seeds) → **LEA'S TASK**
 
-**Command:**
-```bash
-python -m src.train  # with SEED=42 (already there)
-# then change SEED to 0, then to 7 in train.py (or pass as arg)
-```
+This belongs to Lea, not Stephan. Per the status report: *"Use the locked setup on
+data we have never touched before. Repeat it 3 or more times so the result is not luck."*
 
-**What it does:**
-Re-trains the locked config three times with different random seeds (42, 0, 7). Records
-HR@10 and MRR for each run. Computes mean ± std across the three.
+Lea opens the **test set** (never seen during E3/E4/E5 tuning) with the frozen config
+and runs ≥3 seeds to produce the final mean ± std HR@10 for the results slide.
 
-**What it contributes:**
-- Proves the result is not a lucky random initialization
-- The rubric requires ≥3 seeds for the final reported number
-- The headline result becomes: "HR@10 = 0.273 ± 0.002 (mean ± std, 3 seeds)"
-- This is what goes on Cecile's results slide
+**What Stephan hands to Lea:**
 
-**Decision rule:** std should be small (< 0.005). If one seed gives wildly different results,
-check if early stopping is kicking in too early.
-
-- [ ] Seed 42 run logged
-- [ ] Seed 0 run logged
-- [ ] Seed 7 run logged
-- [ ] Mean ± std HR@10 computed and noted: `___ ± ___`
+- Locked config in `src/train.py` (MAX_LEN=20, EMBED_DIM=32, RNN_UNITS=64, CELL="gru")
+- All experiment results logged in `results/log.csv`
 
 ---
 
@@ -234,7 +230,7 @@ The professor asks about your code live. Below is every part of the model and wh
 
 ### The model (`src/model.py`)
 - **Embedding layer**: maps each movie ID to a 32-dimensional vector the model learns
-- **GRU layer (128 units)**: reads the sequence of movie embeddings in order and compresses them into a single 128-number summary of "what this user likes"
+- **GRU layer (64 units)**: reads the sequence of movie embeddings in order and compresses them into a single 64-number summary of "what this user likes"
 - **Genre lookup (frozen)**: each movie also has a multi-hot genre vector (Action=1, Drama=1, etc.) appended to the embedding — frozen, not trained
 - **Rating channel**: your star ratings (1–5, rescaled to 0–1) are appended as a third signal
 - **Dropout (0.3)**: randomly zeroes 30% of neurons during training — prevents memorization
@@ -253,17 +249,115 @@ The professor asks about your code live. Below is every part of the model and wh
 
 ---
 
+## Running the App — Execution Order & Reproducibility
+
+The app needs 3 terminals running at the same time. Always start them in this order
+(API must be up before the frontend tries to call it).
+
+### Terminal 1 — Python scripts (your normal workspace)
+```powershell
+# Activate venv once per session (VSCode usually does this automatically)
+.venv\Scripts\Activate.ps1
+
+# Run any experiment script from here, e.g.:
+python -m src.train
+python -m src.run_e3
+```
+**Needs venv:** YES — prompt shows `(reverie)` when active.
+
+### Terminal 2 — API server (start first)
+```powershell
+.venv\Scripts\Activate.ps1
+uvicorn app.api:app --port 8000
+```
+Wait for: `Application startup complete.`  (~30s — loads model weights)  
+Check: open `http://localhost:8000/health` in browser → `{"status":"ok"}`  
+**Needs venv:** YES (uvicorn lives inside `.venv`).  
+**Keep open:** YES — closing it kills the API and breaks the frontend.
+
+### Terminal 3 — Frontend (start after API is up)
+
+**First time ever (one-time setup):**
+```powershell
+# If VSCode was already open when Node.js was installed, add it to PATH manually:
+$env:PATH = "C:\Program Files\nodejs\;" + $env:PATH
+
+cd "C:\Users\steve\OneDrive - IE University\Term 3\Deep Learning\netflix_sim\reverie\web"
+npm install   # downloads node_modules/ — only needed once
+npm run dev
+```
+
+**Every session after that:**
+```powershell
+# Only needed if "npm" is not found (i.e. VSCode was open before Node was installed):
+$env:PATH = "C:\Program Files\nodejs\;" + $env:PATH
+
+cd "C:\Users\steve\OneDrive - IE University\Term 3\Deep Learning\netflix_sim\reverie\web"
+npm run dev   # skip npm install — node_modules/ already exists
+```
+
+> **Tip:** If `npm` is found without the PATH line, just skip it. It's only needed when
+> VSCode was launched before Node.js was installed (PATH is stale for that session).
+
+Wait for: `Local: http://localhost:5173/`  
+Open that URL in your browser.  
+**Needs venv:** NO — this is Node.js, completely separate from Python.  
+**Keep open:** YES — closing it kills the frontend.
+
+### Quick status check
+| What | URL | Expected |
+|---|---|---|
+| API health | http://localhost:8000/health | `{"status":"ok","catalog_size":3413}` |
+| Frontend | http://localhost:5173 | Reverie UI loads |
+
+### Reproducibility note
+All training runs are logged automatically to `results/log.csv`.
+The locked config lives in `src/train.py` constants (top of file).
+Anyone on the team can reproduce any result by checking out the repo,
+running `uv pip install --native-tls --link-mode=copy -r requirements.txt`,
+and running the same script with the same seed.
+
+---
+
+## What Lea Does Next
+
+With the config locked, Lea's job is to run the **official final evaluation** —
+the one number that goes on the results slide. She has two things to do:
+
+### 1. Run the test set evaluation (≥3 seeds)
+The test set has never been touched during E3/E4/E5. Lea opens it exactly once,
+with the frozen config, and repeats 3+ times to get a stable mean ± std.
+
+Lea needs a script (similar to `src/run_baselines.py` but using `ds.test_hist`
+and `ds.test_target` instead of val). The locked config to use:
+```python
+MAX_LEN=20, EMBED_DIM=32, RNN_UNITS=64, CELL="gru"
+# seeds: 42, 0, 7
+```
+Final reported number: `HR@10 = X.XXX ± 0.00X (mean ± std, 3 seeds, test set)`
+
+### 2. The popularity-fix decision
+The docs mention a logit-adjustment trick (dividing scores by popularity^alpha to
+reduce blockbuster bias) but it is **not in the current code**. Lea decides:
+- **Add it**: one line in `src/recommend.py` — worth testing if it improves test HR@10
+- **Remove from docs**: delete the reference in `EXPERIMENTS.md` (E2 entry)
+She must resolve this before the final test run since it changes the model output.
+
+### 3. Train-vs-val chart (the "not cheating" chart)
+The loss curves are already saved by `track.save_history()` in `results/`.
+Lea just needs to include `results/curve_artifact_full_hybrid.png` in the slide —
+it shows train loss going down while val loss stays tracked, proving no overfitting.
+
+---
+
 ## Summary Checklist
 
 ```
-[ ] Step 0 — python -m src.train            → artifacts/ filled, Em/Cecile unblocked
-[ ] Step 1 — E3 history sweep               → best max_len locked
-[ ] Step 2 — E4 capacity sweep              → best embed_dim + rnn_units locked
-[ ] Step 3 — E5 GRU vs LSTM                → cell type locked
-[ ] Step 4 — Update train.py, notify team  → Lea + Cecile unblocked
-[ ] Step 5 — 3-seed runs                   → mean ± std HR@10 for results slide
+[x] Step 0 — python -m src.train            → artifacts/ filled, Em/Cecile unblocked
+[x] Step 1 — E3 history sweep               → max_len = 20
+[x] Step 2 — E4 capacity sweep              → embed_dim = 32, rnn_units = 64
+[x] Step 3 — E5 GRU vs LSTM                → cell = "gru"
+[x] Step 4 — train.py updated, notify team → Lea + Cecile unblocked
+[ ] Step 5 — LEA'S TASK: 3-seed test run   → mean ± std HR@10 for results slide
 [ ] Step 6 — Know the model cold           → ready for live professor Q&A
 ```
-
-> Scripts for E3, E4, E5 do not exist yet — ask Claude to generate them, or write them
-> following the same pattern as `src/run_ablation.py`.
