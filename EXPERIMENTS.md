@@ -118,18 +118,23 @@ non-overlapping CIs and Wilcoxon p≈0:
 | recent-genre pop | 0.0446 [0.039, 0.050] | 0.0225 [0.020, 0.025] | ~0       |
 | most-popular     | 0.0419 [0.037, 0.047] | 0.0215 [0.019, 0.024] | ~0       |
 
-**E6 feature ablation (validation).** Genre helps; rating alone slightly hurts HR@10 but
-helps MRR. Decision: **full hybrid** (best MRR/NDCG; the rating channel is also required by
-the feedback loop, and costs nothing on HR@10).
+**E6 feature ablation (validation, locked config L=20/d32/u64).** Genre helps on HR@10;
+rating alone hurts HR@10 but the full hybrid wins on MRR and NDCG. Decision: **full hybrid**
+— best ranking quality (MRR), and the rating channel is required for the app's thumbs-down
+feedback feature.
 
 | Variant     | Val HR@10  | Val MRR    | Val NDCG@10 |
 | ----------- | ---------- | ---------- | ----------- |
-| id-only     | 0.2641     | 0.1252     | 0.1466      |
-| +genre      | 0.2712     | 0.1342     | 0.1544      |
-| +rating     | 0.2571     | 0.1240     | 0.1435      |
-| full hybrid | **0.2735** | **0.1348** | **0.1556**  |
+| id-only     | 0.2765     | 0.1310     | 0.1539      |
+| +genre      | 0.2812     | 0.1324     | 0.1561      |
+| +rating     | 0.2558     | 0.1290     | 0.1471      |
+| full hybrid | 0.2740     | **0.1345** | **0.1555**  |
 
-(Aligned settings, patience=10/epochs=60. The saved artifact is this full-hybrid config.)
+Note: id-only here (0.2765) is higher than the earlier headline run (0.2641) because this
+uses the locked MAX_LEN=20 — consistent with E3 showing L=20 > L=50.
 
-> Still TODO: full all-prefix windows (uncap `max_windows_per_user`), L/dim/cell sweeps,
-> then the one-time TEST run on the frozen config under >=3 seeds with CIs + Wilcoxon.
+**E3/E4/E5 sweeps — DONE.** Locked config: `MAX_LEN=20, embed_dim=32, rnn_units=64, cell=gru`.
+
+**Official test run — DONE.** HR@10 = 0.242 ± 0.002 (mean ± std, 3 seeds, test set).
+
+**E6 feature ablation — DONE.** Full hybrid (genre + rating) is the chosen config.

@@ -8,7 +8,7 @@ reference findings there. Numbers are starting points confirmed by `EXPERIMENTS.
 
 ## 1. End-to-end data flow
 
-```
+```text
 MovieLens ratings ─┐
                    ├─▶ preprocess ─▶ all-prefix train windows ─▶ train RNN ─▶ weights + arch-in-code + encoders
 genres ────────────┘                                                              │
@@ -40,12 +40,13 @@ Letterboxd / Netflix export ─▶ map to catalog ─▶ history ─────
 - **Eval histories `[C2]`:** val target = `n-1`, history `1..n-2`; test target = `n`,
   history `1..n-1` (the val item **is** included in the test history). Assert
   `len(test_history) == len(val_history) + 1`.
-- **Windowing/padding `[C3]`:** max length `L=50` (sweep). **Index 0 reserved for PAD**;
-  real movie ids start at 1; softmax output dim = `V+1`; pre-pad / left-truncate; genre and
-  rating channels are **zeroed on padded steps**; confirm the mask propagates through
-  `Concatenate` to the GRU (feed an all-pad sequence; the GRU output must be invariant).
+- **Windowing/padding `[C3]`:** max length `L=20` (decided by E3 — L=20 beats L=50).
+  **Index 0 reserved for PAD**; real movie ids start at 1; softmax output dim = `V+1`;
+  pre-pad / left-truncate; genre and rating channels are **zeroed on padded steps**;
+  confirm the mask propagates through `Concatenate` to the GRU (feed an all-pad sequence;
+  the GRU output must be invariant).
 - **Per-timestep input features (concatenated):**
-  - movie embedding, dim `d_movie=32` start (small first — sweep up only if val improves) `[M2-cap]`
+  - movie embedding, dim `d_movie=32` (decided by E4 — smallest within noise of best) `[M2-cap]`
   - movie genre vector in the **shared genre vocabulary** (multi-hot)
   - **fixed-scale** rating `(r-0.5)/4.5` — no fitted scaler `[C2]`
   - _Leakage note:_ features at step `t` describe the item watched at `t` (past); the target
@@ -55,28 +56,28 @@ Letterboxd / Netflix export ─▶ map to catalog ─▶ history ─────
 
 ## 3. Model
 
-```
-input seq (L, feat) ─▶ Masking ─▶ GRU(128, dropout=0.2) ─▶ Dropout(0.3) ─▶ Dense(V+1, softmax)
+```text
+input seq (L=20, feat) ─▶ Masking ─▶ GRU(64, dropout=0.2) ─▶ Dropout(0.3) ─▶ Dense(V+1, softmax)
 ```
 
-- **Cell:** GRU default; LSTM is one ablation. 1 layer first; 2 only if it helps.
+- **Cell:** GRU (decided by E5 — tied with LSTM, GRU wins on fewer parameters).
+- **Locked config:** `MAX_LEN=20, embed_dim=32, rnn_units=64, cell=gru` (from E3/E4/E5).
 - **Regularization `[H3]`:** **no `recurrent_dropout`** (it disables the cuDNN fast path and
   is fragile on Apple Silicon). Use GRU input `dropout=0.2` + `Dropout(0.3)` before the head
-  - L2 on embeddings + early stopping.
-- **Objective:** sparse categorical cross-entropy on the next item, Adam (lr 1e-3), batch 128.
+  L2 on embeddings, early stopping on val_loss (patience=10, max epochs=60).
+- **Objective:** sparse categorical cross-entropy on the next item, Adam (lr 1e-3), batch 256.
 - **Popularity-bias:** full-catalog softmax with seen-item masking handles this implicitly.
   Logit adjustment was considered but not implemented — the model already beats strong
   baselines without it (see `EXPERIMENTS.md` results).
-- **Model selection `[H4]`:** Phase 2 early-stop on **val loss**; Phase 3 swap in a custom
-  callback for **val NDCG@10** that reuses the evaluator's ranking function. Verify the two
-  correlate before trusting NDCG.
+- **Model selection `[H4]`:** early-stop on **val loss** (patience=10). Best weights restored
+  automatically via `restore_best_weights=True`.
 
 ### Taste vector — derived, mean-centered, top-K `[H2, H7]`
 
 Single training objective (next-item softmax). The taste profile is a deterministic
 function of the softmax — no second trained head:
 
-```
+```text
 P_topK     = renormalized softmax over its top-K items (K≈50–100)
 taste_raw  = Σ_{i∈topK} P_topK(i) · genre(i)
 taste      = taste_raw − genre_marginal        # mean-centered: deviation from average
@@ -155,8 +156,8 @@ the minimum trained history length so the demo never feeds out-of-distribution s
   artifacts, never trains. Recorded backup demo is the real fallback, not a checkbox.
 - `recommend(history)` (in `src/recommend.py`) is the **only** inference path; notebooks
   import it, never reimplement it `[L2]`. No precomputed/hardcoded predictions.
-- Artifacts contract: `weights.h5`, `model_config.json`, `movie_index.json`,
-  `genre_matrix.npy`, `genre_marginal.npy`, `tv_catalog.parquet`, `popularity_train.npy`.
+- Artifacts contract: `weights.weights.h5`, `model_config.json`, `movie_index.json`,
+  `genre_matrix.npy`, `genre_marginal.npy`, `popularity_train.npy`.
 
 ---
 

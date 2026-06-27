@@ -41,9 +41,10 @@ Wilcoxon p ≈ 0 — including item-kNN, the strong baseline shallow RNNs often 
 | recent-genre pop  | 0.045     | 0.023     |
 | most-popular      | 0.042     | 0.022     |
 
-Feature ablation: genre features lift HR@10 to **0.271**; the full hybrid (genre +
-rating) is best on MRR/NDCG and is the chosen configuration. Test set is held out until
-the final frozen config (see `EXPERIMENTS.md`).
+Feature ablation (E6): genre lifts HR@10 to **0.281**; rating alone hurts HR@10 but the
+full hybrid (genre + rating) wins on MRR (**0.1345**) and is the chosen configuration —
+it also powers the app's thumbs-down feedback feature. Official test result (3 seeds):
+**HR@10 = 0.242 ± 0.002**.
 
 ## Architecture
 

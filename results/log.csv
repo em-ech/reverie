@@ -20,3 +20,7 @@ date,experiment,config,HR@10,MRR,NDCG@10,notes
 2026-06-27 13:51,TEST seed=42,L20/d32/u64/gru/p10/e60,0.2437,0.1245,0.1414,OFFICIAL TEST RUN — frozen config
 2026-06-27 14:06,TEST seed=0,L20/d32/u64/gru/p10/e60,0.2402,0.1206,0.1375,OFFICIAL TEST RUN — frozen config
 2026-06-27 14:22,TEST seed=7,L20/d32/u64/gru/p10/e60,0.2415,0.1215,0.1390,OFFICIAL TEST RUN — frozen config
+2026-06-27 15:34,E6 id-only,L20/d32/u64/p10/e60,0.2765,0.1310,0.1539,E6 feature ablation (locked config)
+2026-06-27 15:52,E6 +genre,L20/d32/u64/p10/e60,0.2812,0.1324,0.1561,E6 feature ablation (locked config)
+2026-06-27 16:17,E6 +rating,L20/d32/u64/p10/e60,0.2558,0.1290,0.1471,E6 feature ablation (locked config)
+2026-06-27 16:34,E6 full hybrid,L20/d32/u64/p10/e60,0.2740,0.1345,0.1555,E6 feature ablation (locked config)
