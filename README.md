@@ -96,6 +96,8 @@ and intentionally excluded.
 
 ## Setup & run
 
+### First time only
+
 ```bash
 # Backend (Python 3.11; matches the course conda env)
 pip install -r requirements.txt
@@ -103,15 +105,55 @@ pip install -r requirements.txt
 # 1. Train the model -> writes artifacts/
 python -m src.train
 
-# 2. Start the API
+# 2. Start the API (Terminal 2)
 uvicorn app.api:app --port 8000
-
-# 3. Start the frontend (separate terminal)
-cd web && npm install && npm run dev   # http://localhost:5173
 ```
 
-For a single-process live demo, build the frontend (`npm run build`) and have FastAPI
-serve the static bundle.
+**Terminal 3 - Frontend (PowerShell):**
+
+```powershell
+# 3. Frontend
+cd web
+npm install
+npm run dev
+```
+
+Then open <http://localhost:5173>
+
+---
+
+### Every session after (demo / repeat runs)
+
+No need to retrain or reinstall. Just start the API and frontend in two terminals:
+
+**PowerShell:**
+
+```powershell
+# Terminal 1 - API (activate venv first, then run)
+.venv\Scripts\Activate.ps1
+uvicorn app.api:app --port 8000
+```
+
+```powershell
+# Terminal 2 - Frontend
+cd web
+npm run dev
+```
+
+**Bash (Git Bash / Mac / Linux):**
+
+```bash
+# Terminal 1 - API (activate venv first, then run)
+source .venv/Scripts/activate
+uvicorn app.api:app --port 8000
+```
+
+```bash
+# Terminal 2 - Frontend
+cd web && npm run dev
+```
+
+Then open <http://localhost:5173>
 
 ## Future considerations
 
