@@ -1,5 +1,6 @@
-# Pinned to the proven course env (conda `deep-learning`, Python 3.11).
+# Python 3.12, managed with uv (see .venv/).
 # Exact pins for cross-machine reproducibility and a stable live demo (AUDIT M6).
+# Frontend (web/) is managed separately via web/package.json (Node 24 / npm).
 tensorflow==2.21.0
 keras==3.14.1
 pandas==3.0.3

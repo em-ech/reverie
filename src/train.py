@@ -23,9 +23,13 @@ from src import track
 RATINGS = "data/ml-1m/ratings.dat"
 ART = "artifacts"
 SEED = 42
-MAX_LEN = 50
+# E3 winner: L=20 (0.2779) > L=50 (0.2739) > L=10 (0.2707)
+MAX_LEN = 20
+# E4 winner: d32/u64 smallest within 0.005 of best d64/u128 (0.2782)
 EMBED_DIM = 32
-RNN_UNITS = 128
+RNN_UNITS = 64
+# E5 winner: GRU (0.2740) vs LSTM (0.2730) — tied, GRU wins (fewer params)
+CELL = "gru"
 
 
 def main() -> None:
@@ -36,7 +40,8 @@ def main() -> None:
 
     model = build_hybrid_gru(
         ds.n_items, MAX_LEN, ds.genre_matrix,
-        embed_dim=EMBED_DIM, rnn_units=RNN_UNITS, use_genre=True, use_rating=True,
+        embed_dim=EMBED_DIM, rnn_units=RNN_UNITS,
+        use_genre=True, use_rating=True, cell=CELL,
     )
     X_val = [pad_histories(ds.val_hist, MAX_LEN), pad_ratings(ds.val_hist_rat, MAX_LEN)]
     y_val = np.asarray(ds.val_target, dtype=np.int32)
@@ -66,7 +71,7 @@ def main() -> None:
         json.dump({
             "n_items": ds.n_items, "max_len": MAX_LEN,
             "embed_dim": EMBED_DIM, "rnn_units": RNN_UNITS,
-            "use_genre": True, "use_rating": True,
+            "cell": CELL, "use_genre": True, "use_rating": True,
             "genre_names": ds.genre_names,
         }, fh, indent=2)
     with open(f"{ART}/movie_index.json", "w") as fh:
