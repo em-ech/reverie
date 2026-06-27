@@ -203,18 +203,180 @@ Tell Cecile so she knows exactly what to train and export for the final artifact
 
 ---
 
-## Step 5 — Multi-seed runs (≥3 seeds) → **LEA'S TASK**
+## Step 5 — Multi-seed runs (>=3 seeds) -> **LEA'S TASK**
 
-This belongs to Lea, not Stephan. Per the status report: *"Use the locked setup on
-data we have never touched before. Repeat it 3 or more times so the result is not luck."*
+### Lea's Full Guide — Final Test Run
 
-Lea opens the **test set** (never seen during E3/E4/E5 tuning) with the frozen config
-and runs ≥3 seeds to produce the final mean ± std HR@10 for the results slide.
+**What she's doing:**
+Training the locked model 3 times (different random seeds) on the test set — the data
+that was never touched during tuning. The result is the official number for the
+presentation slide.
 
-**What Stephan hands to Lea:**
+---
 
-- Locked config in `src/train.py` (MAX_LEN=20, EMBED_DIM=32, RNN_UNITS=64, CELL="gru")
-- All experiment results logged in `results/log.csv`
+### Why the test set is safe to use
+
+All three splits — train, val, and test — come from the same `ratings.dat` file.
+`build_dataset()` splits it automatically using leave-one-out:
+
+```
+User watched: Movie A -> Movie B -> Movie C -> Movie D -> Movie E
+
+  Training data:   A, B, C        (used to train the model weights)
+  Validation:      D              (used for early stopping + E3/E4/E5 decisions)
+  Test:            E              (never touched — Lea opens this now)
+```
+
+During all of Stephan's E3/E4/E5 runs, the code only ever looked at `ds.val_target`.
+The `ds.test_target` was sitting there the whole time but was never used. The model
+never saw movie E, for any user, during training or tuning. `build_dataset()` enforces
+this split every time it runs, the same way, deterministically.
+
+---
+
+### Step 1 — Get the code
+
+**If she already has the repo cloned:**
+```bash
+git checkout master
+git pull origin master
+```
+
+**If she's cloning for the first time:**
+```bash
+git clone https://github.com/em-ech/reverie.git
+cd reverie
+```
+
+---
+
+### Step 2 — Set up the Python environment
+
+**Install uv (if she doesn't have it):**
+```bash
+# Mac / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+**Create the virtual environment and install dependencies:**
+
+Mac/Linux:
+```bash
+uv venv --python 3.12
+source .venv/bin/activate
+uv pip install --native-tls -r requirements.txt
+```
+
+Windows (PowerShell):
+```powershell
+uv venv --python 3.12
+.venv\Scripts\Activate.ps1
+uv pip install --native-tls --link-mode=copy -r requirements.txt
+```
+
+> `--link-mode=copy` is only needed on Windows if the project is inside OneDrive.
+> If not on OneDrive, she can drop it.
+
+---
+
+### Step 3 — Get the data
+
+She needs `data/ml-1m/ratings.dat`. If it's not in the repo (large files are usually
+gitignored):
+
+```bash
+# Download ml-1m dataset
+curl -O https://files.grouplens.org/datasets/movielens/ml-1m.zip
+# Mac/Linux:
+unzip ml-1m.zip -d data/
+# Windows (PowerShell):
+Expand-Archive ml-1m.zip -DestinationPath data/
+```
+
+Check it's there:
+
+```bash
+ls data/ml-1m/
+# should show: movies.dat  ratings.dat  users.dat
+```
+
+---
+
+### Step 4 — Run the test evaluation
+
+```bash
+python -m src.run_test
+```
+
+This will:
+
+1. Load `ratings.dat` and build the train/val/test split automatically
+2. Train the model 3 times (seeds 42, 0, 7) — each takes ~10 min on CPU
+3. Evaluate on the test set after each run
+4. Print the final number at the end
+
+**Expected output at the end:**
+```
+==================================================
+  FINAL TEST RESULTS (frozen config, test set)
+==================================================
+  HR@10  : 0.XXXX +/- 0.000X  (seeds [42, 0, 7])
+  MRR    : 0.XXXX +/- 0.000X
+  NDCG@10: 0.XXXX +/- 0.000X
+
+  -> Slide number: HR@10 = 0.XXX +/- 0.00X (mean +/- std, 3 seeds, test set)
+```
+
+The last line is exactly what goes on the results slide.
+
+---
+
+### Step 5 — Push results back
+
+After it finishes, the results are auto-logged to `results/log.csv`.
+Lea should commit and push that:
+
+```bash
+git add results/log.csv
+git commit -m "TEST results: 3-seed official test run"
+git push origin master
+```
+
+---
+
+### What "frozen config" means
+
+The frozen config is the set of model settings decided by Stephan's experiments, already
+hardcoded at the top of `src/run_test.py`:
+
+```python
+MAX_LEN   = 20    # decided by E3
+EMBED_DIM = 32    # decided by E4
+RNN_UNITS = 64    # decided by E4
+CELL      = "gru" # decided by E5
+```
+
+**Do not touch these numbers.** The reason is a strict ML rule: you can only open the
+test set once, with one config, decided before looking at the results.
+
+If Lea runs the script, sees the result, thinks "that's low, let me try RNN_UNITS=128",
+runs it again and gets a better number — that's cheating. She just used the test set to
+tune the model, which makes it no different from validation. The professor will ask
+"how did you pick your final config?" and the answer must be "we decided it on validation
+data, then ran the test set once, blind." That's what makes the number trustworthy.
+
+**Rule: run `src/run_test.py` exactly once, report whatever comes out.**
+
+---
+
+### Things Lea should NOT do
+
+- Do NOT change `MAX_LEN`, `EMBED_DIM`, `RNN_UNITS`, or `CELL` in `src/run_test.py`
+- Do NOT run `src/run_test.py` more than once — once it's run, the result is the result
+- Do NOT run `src/train.py` or any E-script — those are Stephan's tuning scripts that use validation, not test
 
 ---
 
