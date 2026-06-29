@@ -277,3 +277,30 @@ export async function unfriend(friendId: number): Promise<void> {
     "failed to unfriend",
   );
 }
+
+// ---- Blend --------------------------------------------------------------
+export interface BlendTaste {
+  me: Record<string, number>;
+  friend: Record<string, number>;
+  blend: Record<string, number>;
+}
+
+export interface BlendResponse {
+  me: User;
+  friend: User;
+  watch_together: Movie[];
+  already_in_common: Movie[];
+  taste: BlendTaste | null;
+  blurb: string;
+  degraded: false | string;
+}
+
+export async function getBlend(
+  friendId: number,
+  n = 12,
+): Promise<BlendResponse> {
+  return jsonOrThrow<BlendResponse>(
+    await authFetch(`/blend/${friendId}?n=${n}`),
+    "failed to load blend",
+  );
+}

@@ -12,17 +12,10 @@ from app.db import get_db
 from app.deps import get_current_user
 from app.models import HistoryItem, User
 from app.schemas import HistoryAddRequest, HistoryRatingRequest
+from app.services.recommend_service import ordered_history
 from src import recommend as rec
 
 router = APIRouter(prefix="/me", tags=["history"])
-
-
-def ordered_history(db: Session, user_id: int) -> list[tuple[int, float]]:
-    """The user's history as the ordered (movieId, stars) sequence the GRU wants."""
-    rows = db.scalars(
-        select(HistoryItem).where(HistoryItem.user_id == user_id).order_by(HistoryItem.position)
-    ).all()
-    return [(r.movie_id, r.rating) for r in rows]
 
 
 def _enriched_history(db: Session, user_id: int) -> list[dict]:
