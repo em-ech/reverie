@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import enrich
 from app.db import init_db
-from app.routers import auth, catalog, history
+from app.routers import auth, catalog, friends, history
 from src import recommend as rec
 
 
@@ -43,3 +43,4 @@ app.add_middleware(
 app.include_router(catalog.router)
 app.include_router(auth.router)
 app.include_router(history.router)
+app.include_router(friends.router)

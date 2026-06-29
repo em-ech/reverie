@@ -15,7 +15,13 @@ interface Props {
 // Poster-forward, Netflix-style card. Shows the real TMDB poster when present,
 // and falls back to a crimson gradient + title when it is missing or fails to
 // load. The detail overlay (genres, match %, actions) reveals on hover.
-export function PosterCard({ movie, onReject, onAdd, onRemove, showMatch }: Props) {
+export function PosterCard({
+  movie,
+  onReject,
+  onAdd,
+  onRemove,
+  showMatch,
+}: Props) {
   const [broken, setBroken] = useState(false);
   const hasPoster = !!movie.poster_url && !broken;
 

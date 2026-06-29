@@ -202,3 +202,78 @@ export async function removeSavedMovie(
   );
   return data.history;
 }
+
+// ---- Friends ------------------------------------------------------------
+export type Relationship =
+  "none" | "self" | "friends" | "pending_out" | "pending_in";
+
+export interface UserSearchResult {
+  id: number;
+  username: string;
+  display_name?: string | null;
+  relationship: Relationship;
+}
+
+export interface FriendBrief {
+  id: number;
+  username: string;
+  display_name?: string | null;
+  history_count: number;
+}
+
+export interface PendingRequest {
+  requestId: number;
+  id: number;
+  username: string;
+  display_name?: string | null;
+}
+
+export interface FriendsData {
+  friends: FriendBrief[];
+  incoming: PendingRequest[];
+  outgoing: PendingRequest[];
+}
+
+export async function searchUsers(q: string): Promise<UserSearchResult[]> {
+  return jsonOrThrow<UserSearchResult[]>(
+    await authFetch(`/users/search?q=${encodeURIComponent(q)}`),
+    "search failed",
+  );
+}
+
+export async function getFriends(): Promise<FriendsData> {
+  return jsonOrThrow<FriendsData>(
+    await authFetch("/friends"),
+    "failed to load friends",
+  );
+}
+
+export async function requestFriend(username: string): Promise<void> {
+  await jsonOrThrow(
+    await authFetch("/friends/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    }),
+    "request failed",
+  );
+}
+
+export async function respondToRequest(
+  requestId: number,
+  accept: boolean,
+): Promise<void> {
+  await jsonOrThrow(
+    await authFetch(`/friends/${requestId}/${accept ? "accept" : "decline"}`, {
+      method: "POST",
+    }),
+    "failed to respond",
+  );
+}
+
+export async function unfriend(friendId: number): Promise<void> {
+  await jsonOrThrow(
+    await authFetch(`/friends/${friendId}`, { method: "DELETE" }),
+    "failed to unfriend",
+  );
+}

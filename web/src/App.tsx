@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Friends from "./pages/Friends";
+import Blend from "./pages/Blend";
 
 export default function App() {
   return (
@@ -28,6 +29,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Friends />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blend/:friendId"
+            element={
+              <ProtectedRoute>
+                <Blend />
               </ProtectedRoute>
             }
           />
