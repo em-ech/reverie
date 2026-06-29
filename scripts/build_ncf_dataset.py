@@ -1,9 +1,9 @@
 """Build the neural collaborative-filtering training set from the Letterboxd data.
 
 Turns the big Kaggle Letterboxd ratings (samlearner) into compact, integer-indexed
-arrays for a Keras embedding model, slots Em in as one extra user (her Letterboxd
-export, with a temporal holdout by rating date), and builds a per-movie content
-feature matrix for the model's frozen content tower.
+arrays for a Keras embedding model, slots one or more real people in as extra users
+(their Letterboxd exports, each with a temporal holdout by rating date), and builds a
+per-movie content feature matrix for the model's frozen content tower.
 
 One-time data step. Big CSVs stay in ~/Downloads (passed by path); outputs land in
 artifacts/ncf/ (gitignored).
@@ -12,9 +12,10 @@ Usage
 -----
     conda activate deep-learning
     python -m scripts.build_ncf_dataset \
-        --ratings ~/Downloads/ratings_export.csv.zip \
-        --movies  ~/Downloads/movie_data.csv.zip \
-        --letterboxd data/letterboxd_ratings.csv \
+        --ratings ~/Downloads/ratings_export.csv \
+        --movies  ~/Downloads/movie_data.csv \
+        --user em=data/letterboxd_ratings.csv \
+        --user michael=data/michael_ratings.csv \
         --min-movie 30 --min-user 20 --out artifacts/ncf
     # add --subsample 3000000 for a fast dev run
 """
@@ -31,7 +32,6 @@ import pandas as pd
 
 from src.importers import _normalise_title
 
-EM_USER = "__em__"
 NUMERIC = ["year_released", "vote_average", "log_vote_count", "runtime"]
 
 
@@ -55,17 +55,32 @@ def _parse_genres(s) -> list[str]:
     return []
 
 
+def _load_user_films(path: str, key_to_slug: dict) -> pd.DataFrame:
+    """A person's Letterboxd ratings.csv -> matched, date-sorted (slug, rating_val)."""
+    d = pd.read_csv(path).dropna(subset=["Rating"]).copy()
+    d["slug"] = [_title_year_key(t, y) for t, y in zip(d.Name, d.Year)]
+    d["slug"] = d["slug"].map(key_to_slug)
+    d = d.dropna(subset=["slug"]).copy()
+    d["rating_val"] = (pd.to_numeric(d.Rating) * 2).round().clip(1, 10).astype(int)
+    d["Date"] = pd.to_datetime(d.Date, errors="coerce")
+    return d.sort_values("Date")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ratings", required=True)
     ap.add_argument("--movies", required=True)
-    ap.add_argument("--letterboxd", required=True)
+    ap.add_argument("--user", action="append", default=[], metavar="NAME=PATH",
+                    help="a real person's Letterboxd ratings.csv to slot in (repeatable)")
     ap.add_argument("--min-movie", type=int, default=30)
     ap.add_argument("--min-user", type=int, default=20)
+    ap.add_argument("--user-weight-cap", type=float, default=25.0,
+                    help="max sample-weight multiplier for a slotted-in person's rows")
     ap.add_argument("--subsample", type=int, default=0, help="rows to sample for dev")
     ap.add_argument("--out", default="artifacts/ncf")
     args = ap.parse_args()
     rng = np.random.default_rng(42)
+    user_specs = dict(s.split("=", 1) for s in args.user)
 
     # --- 1. ratings -----------------------------------------------------------
     print("loading ratings...")
@@ -75,9 +90,7 @@ def main() -> int:
     )
     if args.subsample and args.subsample < len(r):
         r = r.sample(args.subsample, random_state=42).reset_index(drop=True)
-    print(f"  {len(r):,} ratings")
 
-    # --- 2. filter sparse movies / users -------------------------------------
     mc = r["movie_id"].value_counts()
     uc = r["user_id"].value_counts()
     keep_movies = set(mc[mc >= args.min_movie].index)
@@ -87,7 +100,7 @@ def main() -> int:
     r["user_id"] = r["user_id"].astype(str)
     print(f"  kept {len(r):,} ratings | {len(keep_movies):,} movies | {len(keep_users):,} users")
 
-    # --- 3. movie metadata + Em match ----------------------------------------
+    # --- 2. movie metadata + real-person matching ----------------------------
     print("loading movie metadata...")
     mv = pd.read_csv(
         args.movies,
@@ -98,53 +111,68 @@ def main() -> int:
     mv["key"] = [_title_year_key(t, y) for t, y in zip(mv.movie_title, mv.year_released)]
     key_to_slug = dict(zip(mv["key"], mv["movie_id"]))
 
-    em = pd.read_csv(args.letterboxd)
-    em = em.dropna(subset=["Rating"]).copy()
-    em["key"] = [_title_year_key(t, y) for t, y in zip(em.Name, em.Year)]
-    em["slug"] = em["key"].map(key_to_slug)
-    em = em.dropna(subset=["slug"]).copy()
-    em["rating_val"] = (pd.to_numeric(em.Rating) * 2).round().clip(1, 10).astype(int)
-    em["Date"] = pd.to_datetime(em.Date, errors="coerce")
-    em = em.sort_values("Date")
-    n_em_test = max(1, int(len(em) * 0.2))
-    em_test_films = em.iloc[-n_em_test:]
-    em_train_films = em.iloc[:-n_em_test]
-    print(f"  Em: {len(em)} films matched | {len(em_train_films)} train / {len(em_test_films)} test (most recent)")
+    ext = {name: _load_user_films(path, key_to_slug) for name, path in user_specs.items()}
+    for name, d in ext.items():
+        print(f"  {name}: {len(d)} films matched")
 
-    # --- 4. vocab + integer indices ------------------------------------------
-    vocab = sorted(keep_movies | set(em["slug"]))   # keep Em's films even if sparse
+    # --- 3. vocab + integer indices ------------------------------------------
+    ext_slugs = set().union(*[set(d.slug) for d in ext.values()]) if ext else set()
+    vocab = sorted(keep_movies | ext_slugs)   # keep real people's films even if sparse
     movie_to_idx = {"<UNK>": 0}
     movie_to_idx.update({s: i + 1 for i, s in enumerate(vocab)})
-    users = sorted(keep_users)
-    user_to_idx = {u: i for i, u in enumerate(users)}
-    em_user_idx = len(users)
-    user_to_idx[EM_USER] = em_user_idx
+    user_to_idx = {u: i for i, u in enumerate(sorted(keep_users))}
+    ext_idx = {}
+    for name in ext:
+        ext_idx[name] = len(user_to_idx)
+        user_to_idx[f"__{name}__"] = ext_idx[name]
     n_movies, n_users = len(movie_to_idx), len(user_to_idx)
-    print(f"  vocab: {n_movies:,} movies (incl. UNK) | {n_users:,} users (Em = {em_user_idx})")
+    print(f"  vocab: {n_movies:,} movies (incl. UNK) | {n_users:,} users (+{len(ext)} real people)")
 
-    # --- 5. global rating arrays + split -------------------------------------
+    # --- 4. global rating arrays + split -------------------------------------
     gui = r["user_id"].map(user_to_idx).to_numpy(np.int32)
     gmi = r["movie_id"].map(movie_to_idx).to_numpy(np.int32)
     gy = r["rating_val"].to_numpy(np.int8)
     p = rng.random(len(r))
     masks = {"train": p < 0.8, "val": (p >= 0.8) & (p < 0.9), "test": p >= 0.9}
 
-    # Em rows: train rows folded into global train; test rows kept separate.
-    em_tr_mi = em_train_films["slug"].map(movie_to_idx).to_numpy(np.int32)
-    em_tr_ui = np.full(len(em_train_films), em_user_idx, np.int32)
-    em_tr_y = em_train_films["rating_val"].to_numpy(np.int8)
-    em_te_mi = em_test_films["slug"].map(movie_to_idx).to_numpy(np.int32)
-    em_te_ui = np.full(len(em_test_films), em_user_idx, np.int32)
-    em_te_y = em_test_films["rating_val"].to_numpy(np.int8)
+    # Each real person: most-recent 20% held out; the rest folds into global train.
+    # Their rows are up-weighted so a light user's ~250 ratings train their embedding
+    # roughly as hard as a native user's (median count) thousands.
+    native_median = float(uc[uc >= args.min_user].median())
+    ext_train, ext_tests, ext_w = [], {}, []
+    for name, d in ext.items():
+        n_test = max(1, int(len(d) * 0.2))
+        te, trn = d.iloc[-n_test:], d.iloc[:-n_test]
+        uidx = ext_idx[name]
+        w = float(np.clip(native_median / max(len(trn), 1), 1.0, args.user_weight_cap))
+        ext_train.append((
+            np.full(len(trn), uidx, np.int32),
+            trn.slug.map(movie_to_idx).to_numpy(np.int32),
+            trn.rating_val.to_numpy(np.int8),
+        ))
+        ext_w.append(w)
+        ext_tests[name] = (
+            np.full(len(te), uidx, np.int32),
+            te.slug.map(movie_to_idx).to_numpy(np.int32),
+            te.rating_val.to_numpy(np.int8),
+        )
+        print(f"  {name}: {len(trn)} train / {len(te)} test (most recent), weight x{w:.1f}")
 
-    splits = {}
+    splits, train_weight = {}, None
     for name, m in masks.items():
         u, mi, y = gui[m], gmi[m], gy[m]
         if name == "train":
-            u = np.concatenate([u, em_tr_ui]); mi = np.concatenate([mi, em_tr_mi]); y = np.concatenate([y, em_tr_y])
+            w = np.ones(len(y), np.float32)
+            if ext_train:
+                u = np.concatenate([u] + [a[0] for a in ext_train])
+                mi = np.concatenate([mi] + [a[1] for a in ext_train])
+                y = np.concatenate([y] + [a[2] for a in ext_train])
+                w = np.concatenate([w] + [np.full(len(a[2]), ew, np.float32)
+                                          for a, ew in zip(ext_train, ext_w)])
+            train_weight = w
         splits[name] = (u, mi, y)
 
-    # --- 6. content features (per movie, frozen tower input) -----------------
+    # --- 5. content features (per movie, frozen tower input) -----------------
     print("building content features...")
     mvv = mv[mv["movie_id"].isin(set(vocab))].drop_duplicates("movie_id").set_index("movie_id")
     genre_set: set[str] = set()
@@ -177,14 +205,12 @@ def main() -> int:
         feat[idx, G + 2] = med["log_vote_count"] if pd.isna(vc) else float(np.log1p(vc))
         feat[idx, G + 3] = med["runtime"] if pd.isna(rt) else rt
 
-    # standardize the numeric block (metadata, not labels) over real movies (idx>=1)
     num = feat[1:, G:]
-    mean = num.mean(0)
-    std = num.std(0)
+    mean, std = num.mean(0), num.std(0)
     std[std == 0] = 1.0
     feat[1:, G:] = (num - mean) / std
 
-    # --- 7. baseline stats (train-only) --------------------------------------
+    # --- 6. baseline stats (train-only) --------------------------------------
     tu, tm, ty = splits["train"]
     gmean = float(ty.mean())
     msum = np.bincount(tm, weights=ty, minlength=n_movies)
@@ -194,20 +220,26 @@ def main() -> int:
     ucnt = np.bincount(tu, minlength=n_users)
     user_mean = np.where(ucnt > 0, usum / np.maximum(ucnt, 1), gmean).astype(np.float32)
 
-    # --- 8. write artifacts ---------------------------------------------------
+    # --- 7. write artifacts ---------------------------------------------------
     os.makedirs(args.out, exist_ok=True)
     for name, (u, mi, y) in splits.items():
-        np.savez(f"{args.out}/{name}.npz", user=u, movie=mi, rating=y)
-    np.savez(f"{args.out}/em_test.npz", user=em_te_ui, movie=em_te_mi, rating=em_te_y)
+        if name == "train":
+            np.savez(f"{args.out}/{name}.npz", user=u, movie=mi, rating=y, weight=train_weight)
+        else:
+            np.savez(f"{args.out}/{name}.npz", user=u, movie=mi, rating=y)
+    for name, (u, mi, y) in ext_tests.items():
+        np.savez(f"{args.out}/{name}_test.npz", user=u, movie=mi, rating=y)
     np.save(f"{args.out}/movie_features.npy", feat)
     np.savez(f"{args.out}/baselines.npz", global_mean=np.float32(gmean),
              movie_mean=movie_mean, user_mean=user_mean)
     with open(f"{args.out}/meta.json", "w") as fh:
         json.dump({
-            "n_users": n_users, "n_movies": n_movies, "em_user_idx": em_user_idx,
+            "n_users": n_users, "n_movies": n_movies, "global_mean": gmean,
             "genre_names": genre_names, "n_features": int(feat.shape[1]),
-            "global_mean": gmean, "rating_scale": "1-10",
-            "sizes": {k: int(len(v[2])) for k, v in splits.items()} | {"em_test": int(len(em_te_y))},
+            "rating_scale": "1-10",
+            "external_users": ext_idx,
+            "sizes": {k: int(len(v[2])) for k, v in splits.items()}
+            | {f"{n}_test": int(len(t[2])) for n, t in ext_tests.items()},
         }, fh, indent=2)
     with open(f"{args.out}/movie_index.json", "w") as fh:
         json.dump(movie_to_idx, fh)
@@ -216,8 +248,7 @@ def main() -> int:
 
     print(f"Done. -> {args.out}")
     print(f"  train {len(splits['train'][2]):,} | val {len(splits['val'][2]):,} | "
-          f"test {len(splits['test'][2]):,} | em_test {len(em_te_y)}")
-    print(f"  {n_movies:,} movies x {feat.shape[1]} features ({G} genres + {len(NUMERIC)} numeric)")
+          f"test {len(splits['test'][2]):,} | real people: {list(ext_idx)}")
     return 0
 
 

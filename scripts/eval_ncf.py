@@ -50,19 +50,20 @@ def main() -> int:
     print(f"  user-mean   baseline   RMSE {rmse(yt, predict_user(user_mean, ut)):.3f}")
     print(f"  >> neural net          RMSE {rmse(yt, pm):.3f}  MAE {mae(yt, pm):.3f}")
 
-    # --- Em personal held-out (temporal) -------------------------------------
-    ue, me, ye = load_split(args.data, "em_test")
-    pe = _predict(model, ue, me)
-    print(f"\n=== EM personal (her {len(ye)} most-recent films, never trained on) ===")
-    print(f"  global-mean baseline   RMSE {rmse(ye, predict_global(gmean, len(ye))):.3f}")
-    print(f"  movie-mean  baseline   RMSE {rmse(ye, predict_movie(movie_mean, me)):.3f}")
-    print(f"  >> neural net          RMSE {rmse(ye, pe):.3f}  MAE {mae(ye, pe):.3f}")
-    yb = (ye >= LOVE).astype(int)
-    pb = (pe >= LOVE).astype(int)
-    print(f"\n  'will she love it (>=4 stars)' on her held-out films:")
-    print("  confusion matrix [rows=actual, cols=pred]:")
-    print(confusion_matrix(yb, pb))
-    print(classification_report(yb, pb, zero_division=0))
+    # --- each real person's personal held-out (temporal) ---------------------
+    for name, uidx in meta.get("external_users", {}).items():
+        ue, me, ye = load_split(args.data, f"{name}_test")
+        pe = _predict(model, ue, me)
+        umean = user_mean[uidx]
+        print(f"\n=== {name.upper()} personal ({len(ye)} most-recent films, never trained on) ===")
+        print(f"  predict-their-average  RMSE {rmse(ye, np.full(len(ye), umean)):.3f}")
+        print(f"  movie-mean  baseline   RMSE {rmse(ye, predict_movie(movie_mean, me)):.3f}")
+        print(f"  >> neural net          RMSE {rmse(ye, pe):.3f}  MAE {mae(ye, pe):.3f}")
+        yb = (ye >= LOVE).astype(int)
+        pb = (pe >= LOVE).astype(int)
+        print(f"  'will they love it (>=4 stars)':")
+        print(f"    confusion [rows=actual, cols=pred]: {confusion_matrix(yb, pb).tolist()}")
+        print(classification_report(yb, pb, zero_division=0))
     return 0
 
 
