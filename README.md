@@ -15,6 +15,32 @@ Built for the IE University Deep Learning final project, then extended into a re
 
 ---
 
+## The business case
+
+**Problem.** Streaming choice overload. Households now juggle four or more services and
+tens of thousands of titles, and the average viewer spends roughly **10 minutes per
+session just deciding** what to watch (Nielsen), with many giving up without watching
+anything. For couples and groups the negotiation is worse. That wasted time is the user's
+pain; for platforms it surfaces as disengagement and churn.
+
+**Value proposition.**
+
+- **Saves time.** Reverie replaces ten minutes of scrolling with a ranked shortlist in
+  under a second. Its high-confidence "you will love it" picks held a **precision of 1.00**
+  on held-out real viewers, trustworthy enough to act on immediately.
+- **Solves the group decision.** The Blend intersects two people's recommendations so
+  couples and friends skip the back and forth.
+- **Drives retention (platform framing).** Personalization is the churn lever. Netflix has
+  publicly attributed roughly **$1B per year** to its recommender through reduced churn; a
+  single point of churn reduction on 1M subscribers at €15 per month is about **€1.8M per
+  year** retained. Reverie is that engine, productized. (Industry figures, illustrative of
+  the lever, not a measured claim about this model.)
+
+**Who it is for.** Consumers drowning in streaming choice (the MVP here), and, as a B2B
+engine, any platform that lives or dies on retention.
+
+---
+
 ## What it does
 
 - **Sequential model (the GRU):** a recurrent network trained on MovieLens watch

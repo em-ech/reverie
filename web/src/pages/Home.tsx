@@ -41,7 +41,10 @@ export default function Home() {
             <br />
             watch next?
           </h1>
-          <p className="mt-5 max-w-xl text-lg text-muted-foreground">
+          <p className="mt-5 max-w-xl text-xl font-semibold text-foreground">
+            Spend less time scrolling and more time watching.
+          </p>
+          <p className="mt-3 max-w-xl text-base text-muted-foreground">
             Reverie is a collaborative neural network that learns your taste and
             lines up what to watch next, across movies old and new.
           </p>
