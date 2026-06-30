@@ -24,3 +24,5 @@ date,experiment,config,HR@10,MRR,NDCG@10,notes
 2026-06-27 15:52,E6 +genre,L20/d32/u64/p10/e60,0.2812,0.1324,0.1561,E6 feature ablation (locked config)
 2026-06-27 16:17,E6 +rating,L20/d32/u64/p10/e60,0.2558,0.1290,0.1471,E6 feature ablation (locked config)
 2026-06-27 16:34,E6 full hybrid,L20/d32/u64/p10/e60,0.2740,0.1345,0.1555,E6 feature ablation (locked config)
+2026-06-27 20:06,artifact train (full hybrid),"p10/e60, d32, u64",0.2739,0.1344,0.1554,saved artifact
+2026-06-27 20:12,artifact train (full hybrid),"p10/e60, d32, u64",0.2739,0.1344,0.1554,saved artifact

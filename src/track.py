@@ -49,7 +49,7 @@ def build_leaderboard() -> None:
     """Regenerate results/leaderboard.md from the cumulative log."""
     if not os.path.exists(LOG):
         return
-    rows = list(csv.DictReader(open(LOG)))
+    rows = list(csv.DictReader(open(LOG, encoding="utf-8", errors="replace")))
     out = [
         "# Reverie — Experiment Progress Log",
         "",
