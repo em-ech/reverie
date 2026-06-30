@@ -83,11 +83,12 @@ export function ImportDropzone({ onImported }: Props) {
       ) : (
         <>
           <p className="text-sm font-medium text-foreground">
-            Upload your watchlist
+            Import films you have seen
           </p>
           <p className="text-xs text-muted-foreground">
             Drop a Letterboxd <code>ratings.csv</code> or Netflix{" "}
-            <code>ViewingActivity.csv</code>
+            <code>ViewingActivity.csv</code> and we add them to Seen with their
+            ratings
           </p>
         </>
       )}

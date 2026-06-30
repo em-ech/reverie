@@ -18,11 +18,12 @@ def taste_blurb(taste: dict[str, float] | None, top_films: list[str]) -> str | N
 
     top = [genre_label(g) for g, _ in sorted(taste.items(), key=lambda x: x[1], reverse=True)[:3]]
     genres = join_list(top)
-    lead = f"You lean toward {genres}."
+    lead = f"You lean toward {genres}"
 
+    # top_films are the viewer's OWN highest-rated films (taste anchors), not
+    # recommendations, so the phrasing frames them as favorites.
+    if len(top_films) >= 2:
+        return f"{lead}, going by favorites like {top_films[0]} and {top_films[1]}."
     if top_films:
-        anchor = top_films[0]
-        if len(top_films) >= 2:
-            return f"{lead} Films like {top_films[0]} and {top_films[1]} are right in your wheelhouse."
-        return f"{lead} Something like {anchor} sits right in your wheelhouse."
-    return f"{lead} The picks below lean into exactly that."
+        return f"{lead}, going by a favorite like {top_films[0]}."
+    return f"{lead}. The picks below lean into exactly that."

@@ -351,7 +351,7 @@ export default function BuildHistory() {
 
           <div className="glass rounded-2xl p-4">
             <h2 className="mb-2 text-sm font-bold text-foreground">
-              Or import your watchlist
+              Or import what you have seen
             </h2>
             <ImportDropzone onImported={onImported} />
           </div>
