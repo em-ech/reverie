@@ -17,12 +17,5 @@ def blend_blurb(
     ]
     genres = join_list(top)
     if overlap_count == 0:
-        return (
-            f"You and {friend_name} have pretty different tastes. Here's the "
-            f"closest middle ground to watch together."
-        )
-    films = "film lights" if overlap_count == 1 else "films light"
-    return (
-        f"You and {friend_name} both gravitate to {genres}. "
-        f"{overlap_count} {films} up for both of you. Start at the top."
-    )
+        return f"You and {friend_name} have pretty different tastes."
+    return f"You and {friend_name} both gravitate to {genres}."
