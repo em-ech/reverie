@@ -37,7 +37,9 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-radial" />
         <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center px-6 py-20 text-center">
           <h1 className="text-5xl font-extrabold tracking-tight text-foreground sm:text-6xl">
-            What should I <span className="text-primary">watch next</span>?
+            What should I
+            <br />
+            watch next?
           </h1>
           <p className="mt-5 max-w-xl text-lg text-muted-foreground">
             Reverie is a collaborative neural network that learns your taste and
