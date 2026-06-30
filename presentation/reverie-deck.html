@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reverie — Deep Learning Final Project</title>
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --panel: #161616;
+        --panel-2: #1d1d1d;
+        --border: #2b2b2b;
+        --red: #e11d1d;
+        --red-soft: #f04444;
+        --text: #f4f4f5;
+        --muted: #9aa0a6;
+        --blue: #5b9bf3;
+        --amber: #f6b73c;
+        --green: #46c98b;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        background: #000;
+        color: var(--text);
+        height: 100%;
+        font-family:
+          "Inter",
+          "Segoe UI",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+      }
+      .deck {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      .slide {
+        display: none;
+        position: relative;
+        flex-direction: column;
+        justify-content: center;
+        width: min(96vw, 1280px);
+        aspect-ratio: 16 / 9;
+        padding: 56px 76px;
+        background:
+          radial-gradient(
+            120% 90% at 82% -10%,
+            rgba(225, 29, 29, 0.1),
+            transparent 55%
+          ),
+          var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9);
+      }
+      .slide.active {
+        display: flex;
+      }
+      .kicker {
+        color: var(--red-soft);
+        font-weight: 700;
+        letter-spacing: 3px;
+        font-size: 13px;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+      .title {
+        font-size: 50px;
+        font-weight: 800;
+        letter-spacing: -1.5px;
+        line-height: 1.05;
+      }
+      .title.sm {
+        font-size: 38px;
+      }
+      .lead {
+        color: var(--muted);
+        font-size: 20px;
+        line-height: 1.4;
+        margin-top: 16px;
+        max-width: 820px;
+      }
+      .note {
+        color: var(--muted);
+        font-style: italic;
+        font-size: 15px;
+        margin-top: 18px;
+        max-width: 860px;
+      }
+      .note b {
+        color: #c9c9c9;
+        font-style: normal;
+      }
+      .cls {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .red {
+        color: var(--red-soft);
+      }
+      .blue {
+        color: var(--blue);
+      }
+      .amber {
+        color: var(--amber);
+      }
+      .green {
+        color: var(--green);
+      }
+      .mono {
+        font-family:
+          "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+      }
+      .wordmark {
+        font-weight: 800;
+        letter-spacing: -1px;
+        text-shadow:
+          3px 3px 0 var(--red),
+          6px 6px 0 rgba(225, 29, 29, 0.45);
+      }
+      .divider {
+        background:
+          radial-gradient(
+            80% 80% at 50% 50%,
+            rgba(225, 29, 29, 0.14),
+            transparent 60%
+          ),
+          var(--bg);
+        align-items: flex-start;
+      }
+      .divider .num {
+        font-size: 116px;
+        font-weight: 800;
+        color: rgba(255, 255, 255, 0.08);
+        line-height: 1;
+      }
+      .divider .title {
+        font-size: 60px;
+        margin-top: -8px;
+      }
+      .eq {
+        display: inline-block;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 20px;
+        font-size: 22px;
+        margin-top: 22px;
+      }
+      .statbig {
+        font-size: 80px;
+        font-weight: 800;
+        letter-spacing: -3px;
+        line-height: 1;
+      }
+      .statsub {
+        color: var(--muted);
+        font-size: 18px;
+        margin-top: 10px;
+        max-width: 660px;
+      }
+      .pipe {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+      }
+      .node {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 11px 13px;
+        font-size: 14px;
+        line-height: 1.3;
+      }
+      .node b {
+        display: block;
+      }
+      .node span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .node.blue {
+        border-color: rgba(91, 155, 243, 0.55);
+      }
+      .node.amber {
+        border-color: rgba(246, 183, 60, 0.55);
+      }
+      .node.out {
+        border-color: rgba(225, 29, 29, 0.6);
+        background: rgba(225, 29, 29, 0.08);
+      }
+      .arrow {
+        color: var(--muted);
+        font-size: 20px;
+      }
+      .flow .node {
+        animation: nodeglow 3s ease-in-out infinite;
+      }
+      .flow .node:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .flow .node:nth-child(5) {
+        animation-delay: 0.6s;
+      }
+      .flow .node:nth-child(7) {
+        animation-delay: 0.9s;
+      }
+      .flow .node:nth-child(9) {
+        animation-delay: 1.2s;
+      }
+      @keyframes nodeglow {
+        0%,
+        70%,
+        100% {
+          box-shadow: none;
+        }
+        12% {
+          box-shadow: 0 0 0 2px rgba(225, 29, 29, 0.5);
+        }
+      }
+      /* two-model split */
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        margin-top: 24px;
+      }
+      .mcard {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 22px;
+        background: var(--panel);
+      }
+      .mcard.b1 {
+        border-top: 3px solid var(--blue);
+      }
+      .mcard.b2 {
+        border-top: 3px solid var(--amber);
+      }
+      .mcard h3 {
+        font-size: 22px;
+        font-weight: 800;
+      }
+      .mcard .q {
+        font-size: 16px;
+        color: #dcdcdc;
+        margin: 8px 0 12px;
+      }
+      .mcard ul {
+        list-style: none;
+      }
+      .mcard li {
+        font-size: 14px;
+        line-height: 1.6;
+        padding-left: 16px;
+        position: relative;
+        color: #cfcfcf;
+      }
+      .mcard li::before {
+        content: "▸";
+        position: absolute;
+        left: 0;
+        color: var(--muted);
+      }
+      /* system architecture diagram */
+      .arch {
+        display: flex;
+        align-items: stretch;
+        gap: 3px;
+        margin-top: 22px;
+        width: 100%;
+      }
+      .col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+      .colh {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--red-soft);
+        text-align: center;
+        margin-bottom: 3px;
+        font-weight: 700;
+      }
+      .box {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 7px 8px;
+        font-size: 11.5px;
+        line-height: 1.25;
+        text-align: center;
+      }
+      .box b {
+        display: block;
+        font-size: 12px;
+      }
+      .box small {
+        color: var(--muted);
+        font-size: 10px;
+      }
+      .box.db {
+        border-color: rgba(70, 201, 139, 0.5);
+      }
+      .box.gru {
+        border-color: rgba(91, 155, 243, 0.55);
+      }
+      .box.ncf {
+        border-color: rgba(246, 183, 60, 0.55);
+      }
+      .box.ui {
+        border-color: rgba(225, 29, 29, 0.5);
+      }
+      .sep {
+        align-self: center;
+        color: var(--muted);
+        font-size: 18px;
+        flex: 0 0 auto;
+      }
+      /* layer stack (real architecture) */
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+      }
+      .lb {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 11px 13px;
+        font-size: 13.5px;
+        text-align: center;
+      }
+      .lb b {
+        display: block;
+      }
+      .lb small {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .lb.blue {
+        border-color: rgba(91, 155, 243, 0.55);
+      }
+      .lb.amber {
+        border-color: rgba(246, 183, 60, 0.55);
+      }
+      .lb.out {
+        border-color: rgba(225, 29, 29, 0.6);
+        background: rgba(225, 29, 29, 0.08);
+      }
+      .gru { display: flex; align-items: center; gap: 6px; margin-top: 24px; }
+      .cell { width: 80px; height: 62px; border: 1px solid rgba(91, 155, 243, 0.55); border-radius: 10px;
+        background: var(--panel-2); display: flex; align-items: center; justify-content: center;
+        font-size: 13px; color: var(--muted); animation: cellpulse 3s ease-in-out infinite; }
+      .gru .cell:nth-child(3) { animation-delay: 0.4s; } .gru .cell:nth-child(5) { animation-delay: 0.8s; }
+      .gru .cell:nth-child(7) { animation-delay: 1.2s; } .gru .cell:nth-child(9) { animation-delay: 1.6s; }
+      @keyframes cellpulse { 0%, 70%, 100% { box-shadow: none; color: var(--muted); }
+        12% { box-shadow: 0 0 0 2px rgba(91, 155, 243, 0.6); color: var(--blue); } }
+      .recur { color: var(--muted); font-size: 20px; }
+      table {
+        border-collapse: collapse;
+        font-size: 18px;
+        margin-top: 22px;
+        min-width: 440px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 9px 18px;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        color: var(--muted);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      td.win {
+        color: var(--green);
+        font-weight: 800;
+      }
+      .three {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 28px;
+        margin-top: 24px;
+      }
+      .three h4 {
+        font-size: 15px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+      }
+      .three ul {
+        list-style: none;
+      }
+      .three li {
+        font-size: 15px;
+        line-height: 1.5;
+        color: #d6d6d6;
+        padding-left: 14px;
+        position: relative;
+        margin-bottom: 8px;
+      }
+      .three li::before {
+        content: "–";
+        position: absolute;
+        left: 0;
+        color: var(--muted);
+      }
+      .credits {
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .credits b {
+        color: var(--text);
+      }
+      .bars {
+        margin-top: 22px;
+        display: grid;
+        gap: 11px;
+        max-width: 720px;
+      }
+      .bar {
+        display: grid;
+        grid-template-columns: 130px 1fr 56px;
+        align-items: center;
+        gap: 14px;
+        font-size: 15px;
+      }
+      .bl {
+        color: #cfcfcf;
+        text-align: right;
+      }
+      .bt {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        height: 22px;
+        overflow: hidden;
+      }
+      .bf {
+        height: 100%;
+        background: #3a4658;
+      }
+      .bf.win {
+        background: var(--green);
+      }
+      .bf.red {
+        background: var(--red-soft);
+      }
+      .bf.blue {
+        background: var(--blue);
+      }
+      .bv {
+        color: #cfcfcf;
+        font-variant-numeric: tabular-nums;
+      }
+      .cm {
+        display: grid;
+        grid-template-columns: 96px 100px 100px;
+        gap: 7px;
+        margin-top: 18px;
+      }
+      .cm .h {
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .cm .c {
+        height: 62px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        font-size: 23px;
+        font-weight: 800;
+      }
+      .cm .c.zero {
+        background: rgba(70, 201, 139, 0.2);
+        border-color: var(--green);
+        color: var(--green);
+      }
+      .cm .c.tp {
+        background: rgba(70, 201, 139, 0.12);
+        border-color: rgba(70, 201, 139, 0.5);
+        color: var(--green);
+      }
+      .net .edge {
+        stroke: #2f2f2f;
+        stroke-width: 1.4;
+      }
+      .net .node-c {
+        fill: var(--panel-2);
+        stroke: #444;
+        stroke-width: 2;
+      }
+      .net .node-c.in {
+        stroke: var(--blue);
+      }
+      .net .node-c.out {
+        stroke: var(--red);
+      }
+      .spark {
+        fill: var(--red-soft);
+        animation: flow var(--dur, 1.4s) linear infinite;
+        opacity: 0;
+      }
+      @keyframes flow {
+        0% {
+          offset-distance: 0%;
+          opacity: 0;
+        }
+        12% {
+          opacity: 1;
+        }
+        88% {
+          opacity: 1;
+        }
+        100% {
+          offset-distance: 100%;
+          opacity: 0;
+        }
+      }
+      .layerlabel {
+        fill: var(--muted);
+        font-size: 13px;
+      }
+      .video {
+        margin-top: 18px;
+        width: 100%;
+        max-width: 880px;
+        max-height: 54vh;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+      }
+      .videohint {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 10px;
+      }
+      .nav {
+        position: fixed;
+        bottom: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 14px;
+        z-index: 20;
+      }
+      .nav button {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .counter {
+        position: fixed;
+        bottom: 18px;
+        right: 22px;
+        color: var(--muted);
+        font-size: 13px;
+        z-index: 20;
+      }
+      .progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        background: var(--red);
+        z-index: 20;
+        transition: width 0.25s;
+      }
+      @page {
+        size: 1280px 720px;
+        margin: 0;
+      }
+      @media print {
+        html,
+        body {
+          overflow: visible;
+          height: auto;
+          background: #000;
+        }
+        .deck {
+          display: block !important;
+          height: auto !important;
+        }
+        .nav,
+        .counter,
+        .progress {
+          display: none !important;
+        }
+        .slide {
+          display: flex !important;
+          width: 1280px;
+          height: 720px;
+          aspect-ratio: auto;
+          margin: 0;
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+          page-break-after: always;
+          break-after: page;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress" id="bar"></div>
+    <div class="deck" id="deck">
+      <!-- 1 TITLE -->
+      <section class="slide">
+        <div class="title wordmark" style="font-size: 84px">Reverie</div>
+        <div class="lead" style="font-size: 25px; margin-top: 22px">
+          What should I watch next?
+        </div>
+        <div class="note" style="margin-top: 36px">
+          Amaly Attia · Em Echeverria · Lea Sarouphim Hochar · Stephan Pentchev
+          · Cecile Tambey
+        </div>
+        <div class="note" style="margin-top: 6px">
+          <b>Deep Learning · IE University</b> · Functional MVP
+        </div>
+      </section>
+
+      <!-- 2 PROBLEM -->
+      <section class="slide">
+        <div class="kicker">The problem</div>
+        <div class="title">
+          Tens of thousands of titles.<br /><span class="red">Ten minutes</span>
+          deciding.<br />Then you give up.
+        </div>
+        <div class="note">
+          More choice made watching harder, not easier, and for platforms that
+          decision fatigue becomes <b>churn</b>.
+        </div>
+      </section>
+
+      <!-- 3 VALUE -->
+      <section class="slide">
+        <div class="kicker">The value proposition</div>
+        <div class="title sm">
+          Your next film, in <span class="green">under a second</span>.
+        </div>
+        <div class="lead">
+          Import what you have seen and Reverie ranks the whole catalog to your
+          taste. The Blend does it for two people at once.
+        </div>
+      </section>
+
+      <!-- 4 PRECISION -->
+      <section class="slide">
+        <div class="statbig green">1.00</div>
+        <div class="statsub">
+          precision on the high-confidence "you will love it" picks, across
+          held-out real viewers. When Reverie is sure, it has been right.
+        </div>
+      </section>
+
+      <!-- 5 IMPACT -->
+      <section class="slide">
+        <div class="kicker">Business impact · illustrative</div>
+        <div style="display: flex; gap: 80px; margin-top: 10px">
+          <div>
+            <div class="statbig red" style="font-size: 58px">~$1B/yr</div>
+            <div class="statsub">
+              Netflix attributes to its recommender via reduced churn
+            </div>
+          </div>
+          <div>
+            <div class="statbig green" style="font-size: 58px">~€1.8M/yr</div>
+            <div class="statsub">
+              retained from a 1-point churn cut on 1M subs at €15/mo
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 01 SYSTEM ===== -->
+      <section class="slide divider">
+        <div class="num">01</div>
+        <div class="kicker">How we built it</div>
+        <div class="title">The system, end to end</div>
+      </section>
+
+      <!-- 6 SYSTEM ARCHITECTURE -->
+      <section class="slide">
+        <div class="kicker">
+          Architecture · sources → data → model → product
+        </div>
+        <div class="title sm" style="font-size: 30px">
+          Every piece, and how it connects.
+        </div>
+        <div class="arch">
+          <div class="col">
+            <div class="colh">Sources</div>
+            <div class="box src">
+              <b>MovieLens</b><small>watch sequences</small>
+            </div>
+            <div class="box src">
+              <b>Letterboxd ratings</b><small>samlearner, 9.9M</small>
+            </div>
+            <div class="box src">
+              <b>Letterboxd metadata</b><small>gsimonx37, posters</small>
+            </div>
+            <div class="box src"><b>TMDB</b><small>genres, ratings</small></div>
+            <div class="box ui">
+              <b>Your upload</b><small>Letterboxd / Netflix</small>
+            </div>
+          </div>
+          <span class="sep">→</span>
+          <div class="col">
+            <div class="colh">Data layer</div>
+            <div class="box">
+              <b>Pipelines</b><small>build datasets + catalog</small>
+            </div>
+            <div class="box db">
+              <b>Artifacts</b><small>weights · embeddings · catalog.json</small>
+            </div>
+            <div class="box db">
+              <b>SQLite</b><small>users · history · watchlist · friends</small>
+            </div>
+          </div>
+          <span class="sep">→</span>
+          <div class="col">
+            <div class="colh">Models (ANN)</div>
+            <div class="box gru"><b>GRU (RNN)</b><small>next-item</small></div>
+            <div class="box ncf">
+              <b>NCF (collaborative)</b><small>rating regression</small>
+            </div>
+            <div class="box">
+              <b>Nearest-favorites ranker</b><small>serving</small>
+            </div>
+          </div>
+          <span class="sep">→</span>
+          <div class="col">
+            <div class="colh">API</div>
+            <div class="box">
+              <b>FastAPI</b><small>/recommend · /catalog</small>
+            </div>
+            <div class="box"><b></b><small>/import · /blend</small></div>
+            <div class="box"><b></b><small>/auth · /friends</small></div>
+          </div>
+          <span class="sep">→</span>
+          <div class="col">
+            <div class="colh">UI</div>
+            <div class="box ui">
+              <b>React + Vite</b><small>import · swipe / cards</small>
+            </div>
+            <div class="box ui"><b></b><small>results + match %</small></div>
+            <div class="box ui"><b></b><small>Blend + taste radar</small></div>
+          </div>
+        </div>
+        <div class="note">
+          Two deep-learning models sit at the centre. Everything left of them is
+          data; everything right is the product.
+        </div>
+      </section>
+
+      <!-- 7 TWO MODELS -->
+      <section class="slide">
+        <div class="kicker">The two networks</div>
+        <div class="title sm">One product, two questions.</div>
+        <div class="split">
+          <div class="mcard b1">
+            <h3 class="blue">Model 1 · GRU</h3>
+            <div class="q">"What comes <b>next</b> in your sequence?"</div>
+            <ul>
+              <li>Recurrent network (RNN)</li>
+              <li>Sequential, order matters</li>
+              <li>Classification: softmax over the catalog</li>
+              <li>Trained on MovieLens</li>
+            </ul>
+          </div>
+          <div class="mcard b2">
+            <h3 class="amber">Model 2 · NCF</h3>
+            <div class="q">"<b>How much</b> will you like this film?"</div>
+            <ul>
+              <li>Feed-forward network (ANN) with embeddings</li>
+              <li>Collaborative, learns from everyone</li>
+              <li>Regression: a predicted rating 1–10</li>
+              <li>Trained on 9.9M Letterboxd ratings</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8 MODEL 1 — THE RNN -->
+      <section class="slide">
+        <div class="kicker">
+          <span class="blue">Model 1 · GRU</span> · the recurrent network
+        </div>
+        <div class="title sm">
+          A cell that <span class="blue">remembers</span>.
+        </div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-top: 14px;
+          "
+        >
+          <svg viewBox="0 0 250 170" width="250" height="170">
+            <path
+              d="M158 64 C 212 44, 212 116, 158 96"
+              fill="none"
+              stroke="#5b9bf3"
+              stroke-width="2"
+              marker-end="url(#a)"
+            />
+            <text x="214" y="84" fill="#9aa0a6" font-size="11">hidden</text>
+            <text x="214" y="97" fill="#9aa0a6" font-size="11">state</text>
+            <rect
+              x="78"
+              y="58"
+              width="80"
+              height="44"
+              rx="9"
+              fill="#1d1d1d"
+              stroke="#5b9bf3"
+              stroke-width="2"
+            />
+            <text
+              x="118"
+              y="85"
+              fill="#f4f4f5"
+              font-size="16"
+              text-anchor="middle"
+              font-weight="700"
+            >
+              GRU
+            </text>
+            <line
+              x1="118"
+              y1="150"
+              x2="118"
+              y2="104"
+              stroke="#9aa0a6"
+              stroke-width="1.6"
+              marker-end="url(#a)"
+            />
+            <text
+              x="118"
+              y="166"
+              fill="#9aa0a6"
+              font-size="11"
+              text-anchor="middle"
+            >
+              x&#8348; (film features)
+            </text>
+            <line
+              x1="118"
+              y1="58"
+              x2="118"
+              y2="20"
+              stroke="#9aa0a6"
+              stroke-width="1.6"
+              marker-end="url(#a)"
+            />
+            <text
+              x="118"
+              y="14"
+              fill="#9aa0a6"
+              font-size="11"
+              text-anchor="middle"
+            >
+              h&#8348;
+            </text>
+            <defs>
+              <marker
+                id="a"
+                markerWidth="7"
+                markerHeight="7"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 z" fill="#9aa0a6" />
+              </marker>
+            </defs>
+          </svg>
+          <div class="stack" style="margin-top: 0">
+            <div class="lb blue">
+              <b>Last 20 films</b><small>sliding window</small>
+            </div>
+            <span class="arrow">→</span>
+            <div class="lb blue">
+              <b>per step</b
+              ><small>embed 32 &#8853; genre &#8853; rating</small>
+            </div>
+            <span class="arrow">→</span>
+            <div class="lb blue">
+              <b>GRU · 64</b><small>reset + update gates</small>
+            </div>
+            <span class="arrow">→</span>
+            <div class="lb"><b>Dropout</b></div>
+            <span class="arrow">→</span>
+            <div class="lb out"><b>Softmax</b><small>next film</small></div>
+          </div>
+        </div>
+        <div class="note">
+          The cell folds: each film's features (an <b>embedding</b> plus genre
+          and rating channels) update a hidden state passed to the next step.
+          The head is a <b>classification</b> over the catalog, cross-entropy
+          loss.
+          <span class="cls">(class: embeddings, the memory loop, softmax)</span>
+        </div>
+      </section>
+
+      <!-- 9 MODEL 1 — unrolled (animated) + design -->
+      <section class="slide">
+        <div class="kicker">
+          <span class="blue">Model 1 · GRU</span> · unrolled &amp; tuned
+        </div>
+        <div class="title sm">Unrolled through time.</div>
+        <div
+          class="gru"
+          style="display: flex; align-items: center; gap: 6px; margin-top: 24px"
+        >
+          <div class="cell">film 1</div>
+          <span class="recur">→</span>
+          <div class="cell">film 2</div>
+          <span class="recur">→</span>
+          <div class="cell">film 3</div>
+          <span class="recur">→</span>
+          <div class="cell">…</div>
+          <span class="recur">→</span>
+          <div class="cell" style="border-color: rgba(225, 29, 29, 0.6)">
+            next?
+          </div>
+        </div>
+        <div class="note">
+          Trained on <b>all prefixes</b> (every prefix predicts the next film)
+          with <b>leave-one-out</b> evaluation. Config chosen on validation:
+          <b>L=20, d=32, units=64, GRU</b> over LSTM.
+          <span class="cls">(class: train-only statistics, no leakage)</span>
+        </div>
+      </section>
+
+      <!-- 10 MODEL 2 — THE NCF -->
+      <section class="slide">
+        <div class="kicker">
+          <span class="amber">Model 2 · NCF</span> · the feed-forward network
+        </div>
+        <div class="title sm">
+          Embeddings into <span class="amber">hidden layers</span>.
+        </div>
+        <div class="stack">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div class="lb amber"><b>User id → emb 50</b></div>
+            <div class="lb amber"><b>Movie id → emb 50</b></div>
+            <div class="lb">
+              <b>Content tower 23</b><small>genres + numerics · frozen</small>
+            </div>
+          </div>
+          <span class="arrow">→</span>
+          <div class="lb amber"><b>concat</b></div>
+          <span class="arrow">→</span>
+          <div class="lb amber"><b>Dense 64 · ReLU</b></div>
+          <span class="arrow">→</span>
+          <div class="lb amber">
+            <b>Dense 32 · ReLU</b><small>+ dropout</small>
+          </div>
+          <span class="arrow">→</span>
+          <div class="lb out"><b>Dense 1</b><small>rating 1–10</small></div>
+        </div>
+        <div class="note">
+          The <b>Dense + ReLU</b> layers are the hidden layers that learn what
+          makes you <i>you</i>
+          <span class="cls">(class: Anatomy 102/103)</span>; the loss is
+          <b>MSE</b>, reported as RMSE
+          <span class="cls">(class: "the strict ruler")</span>.
+        </div>
+      </section>
+
+      <!-- 11 MODEL 2 — forward pass animated + residual -->
+      <section class="slide">
+        <div class="kicker">
+          <span class="amber">Model 2 · NCF</span> · forward pass &amp; design
+        </div>
+        <div class="title sm">
+          Biases recover the baseline,<br />embeddings learn the
+          <span class="amber">residual</span>.
+        </div>
+        <svg
+          class="net"
+          id="net1"
+          viewBox="0 0 760 250"
+          width="100%"
+          height="220"
+        ></svg>
+        <div class="eq mono" style="font-size: 15px; margin-top: 8px">
+          rating = global mean + user bias + movie bias + MLP(u, m, content)
+        </div>
+      </section>
+
+      <!-- 12 SERVING -->
+      <section class="slide">
+        <div class="kicker">Serving · the real recommender</div>
+        <div class="title sm">
+          We rank by your <span class="green">nearest favorites</span>.
+        </div>
+        <div class="lead">
+          A cold fold-in underperformed, so the app ranks each film by its
+          similarity to your highest-rated films in the learned movie-embedding
+          space, plus a genre anchor and a recency nudge.
+        </div>
+        <div class="note">
+          A choice we reached by testing: the embedding space is well trained; a
+          fresh user vector from a few ratings is not.
+        </div>
+      </section>
+
+      <!-- ===== 02 EVIDENCE ===== -->
+      <section class="slide divider">
+        <div class="num">02</div>
+        <div class="kicker">Evidence</div>
+        <div class="title">Does it work?</div>
+      </section>
+
+      <!-- 13 training curve -->
+      <section class="slide">
+        <div class="kicker">Overfitting prevention · our real run</div>
+        <div class="title sm">We watched it overfit, then stopped.</div>
+        <svg
+          viewBox="0 0 540 210"
+          width="560"
+          height="206"
+          style="margin-top: 6px"
+        >
+          <line x1="55" y1="35" x2="55" y2="195" stroke="#333" />
+          <line x1="55" y1="195" x2="505" y2="195" stroke="#333" />
+          <line
+            x1="325"
+            y1="35"
+            x2="325"
+            y2="195"
+            stroke="#f6b73c"
+            stroke-dasharray="5 5"
+          />
+          <text x="332" y="48" fill="#f6b73c" font-size="12">
+            early stop · epoch 16
+          </text>
+          <polyline
+            fill="none"
+            stroke="#5b9bf3"
+            stroke-width="2.5"
+            points="55,38 73,89 91,116 109,130 127,139 145,146 163,151 181,156 199,160 217,163 235,166 253,169 271,171 289,174 307,176 325,178 343,180 361,181 379,183 397,184 415,186 433,187 451,188 469,189 487,190 505,191"
+          />
+          <polyline
+            fill="none"
+            stroke="#f04444"
+            stroke-width="2.5"
+            points="55,62 73,93 91,110 109,119 127,123 145,127 163,129 181,131 199,132 217,132 235,133 253,133 271,134 289,134 307,134 325,134 343,133 361,133 379,133 397,133 415,132 433,132 451,131 469,131 487,131 505,130"
+          />
+          <text x="430" y="183" fill="#5b9bf3" font-size="12">train loss</text>
+          <text x="432" y="118" fill="#f04444" font-size="12">val loss</text>
+        </svg>
+        <div class="note">
+          The real GRU run: training loss keeps falling, validation bottoms at
+          epoch 16 then climbs. Early stopping restores the best weights.
+        </div>
+      </section>
+
+      <!-- 14 sweeps -->
+      <section class="slide">
+        <div class="kicker">Hyperparameter tuning · chosen on validation</div>
+        <div class="title sm">
+          History length: <span class="green">20</span> wins.
+        </div>
+        <div class="bars">
+          <div class="bar">
+            <span class="bl">L = 10</span>
+            <div class="bt"><div class="bf" style="width: 60%"></div></div>
+            <span class="bv">0.271</span>
+          </div>
+          <div class="bar">
+            <span class="bl">L = 20</span>
+            <div class="bt"><div class="bf win" style="width: 100%"></div></div>
+            <span class="bv">0.278</span>
+          </div>
+          <div class="bar">
+            <span class="bl">L = 50</span>
+            <div class="bt"><div class="bf" style="width: 78%"></div></div>
+            <span class="bv">0.274</span>
+          </div>
+        </div>
+        <div class="note">
+          HR@10 across the E3 sweep. We then kept <b>d32 / u64</b> (E4, a
+          smaller train–val gap than bigger nets) and <b>GRU over LSTM</b> (E5,
+          same score, fewer parameters).
+        </div>
+      </section>
+
+      <!-- 15 ablation -->
+      <section class="slide">
+        <div class="kicker">Feature engineering · E6 ablation</div>
+        <div class="title sm">Genre helps. Rating alone hurts.</div>
+        <div class="bars">
+          <div class="bar">
+            <span class="bl">id only</span>
+            <div class="bt"><div class="bf" style="width: 85%"></div></div>
+            <span class="bv">0.277</span>
+          </div>
+          <div class="bar">
+            <span class="bl">+ genre</span>
+            <div class="bt"><div class="bf win" style="width: 100%"></div></div>
+            <span class="bv">0.281</span>
+          </div>
+          <div class="bar">
+            <span class="bl">+ rating only</span>
+            <div class="bt"><div class="bf red" style="width: 19%"></div></div>
+            <span class="bv">0.256</span>
+          </div>
+          <div class="bar">
+            <span class="bl">full hybrid</span>
+            <div class="bt"><div class="bf blue" style="width: 77%"></div></div>
+            <span class="bv">0.274</span>
+          </div>
+        </div>
+        <div class="note">
+          HR@10. The <b>full hybrid</b> we ship wins on MRR (0.135) and powers
+          the live thumbs-down, the rating channel is what lets a "no" re-rank.
+        </div>
+      </section>
+
+      <!-- 16 GRU baselines -->
+      <section class="slide">
+        <div class="kicker">GRU · ranking</div>
+        <div class="title sm">Far beyond the baselines.</div>
+        <div class="bars">
+          <div class="bar">
+            <span class="bl">Reverie GRU</span>
+            <div class="bt"><div class="bf win" style="width: 100%"></div></div>
+            <span class="bv">0.257</span>
+          </div>
+          <div class="bar">
+            <span class="bl">item-kNN</span>
+            <div class="bt"><div class="bf" style="width: 30%"></div></div>
+            <span class="bv">0.076</span>
+          </div>
+          <div class="bar">
+            <span class="bl">most-popular</span>
+            <div class="bt"><div class="bf" style="width: 16%"></div></div>
+            <span class="bv">0.042</span>
+          </div>
+        </div>
+        <div class="note">
+          HR@10. Frozen test, 3 seeds: <b>0.242 ± 0.002</b>, non-overlapping 95%
+          CIs vs item-kNN, the strong baseline shallow RNNs often lose to.
+        </div>
+      </section>
+
+      <!-- 17 NCF baselines -->
+      <section class="slide">
+        <div class="kicker">NCF · rating</div>
+        <div class="title sm">Lower RMSE than every baseline.</div>
+        <div class="bars">
+          <div class="bar">
+            <span class="bl">global mean</span>
+            <div class="bt"><div class="bf" style="width: 100%"></div></div>
+            <span class="bv">2.072</span>
+          </div>
+          <div class="bar">
+            <span class="bl">user mean</span>
+            <div class="bt"><div class="bf" style="width: 95%"></div></div>
+            <span class="bv">1.963</span>
+          </div>
+          <div class="bar">
+            <span class="bl">movie mean</span>
+            <div class="bt"><div class="bf" style="width: 78%"></div></div>
+            <span class="bv">1.619</span>
+          </div>
+          <div class="bar">
+            <span class="bl">neural net</span>
+            <div class="bt"><div class="bf win" style="width: 66%"></div></div>
+            <span class="bv">1.372</span>
+          </div>
+        </div>
+        <div class="note">
+          Lower is better. Beats the movie-mean baseline for <b>94%</b> of users
+          (median per-user RMSE 1.32). Cold start is still hard, and we say so.
+        </div>
+      </section>
+
+      <!-- 18 confusion -->
+      <section class="slide">
+        <div class="kicker">"Will you love it?" · the classification view</div>
+        <div class="title sm">
+          Zero false alarms → <span class="green">precision 1.00</span>.
+        </div>
+        <div class="cm">
+          <div class="h"></div>
+          <div class="h">predicted: not</div>
+          <div class="h">predicted: love</div>
+          <div class="h">actual: not</div>
+          <div class="c">30</div>
+          <div class="c zero">0</div>
+          <div class="h">actual: love</div>
+          <div class="c">39</div>
+          <div class="c tp">4</div>
+        </div>
+        <div class="note">
+          A held-out viewer's most-recent films. Conservative (it misses some),
+          but every film it flagged as a love was one, the trustworthy short
+          list a recommender needs.
+        </div>
+      </section>
+
+      <!-- ===== 03 MVP ===== -->
+      <section class="slide divider">
+        <div class="num">03</div>
+        <div class="kicker">The MVP</div>
+        <div class="title">A real, working product</div>
+      </section>
+
+      <!-- 19 integration -->
+      <section class="slide">
+        <div class="kicker">End to end · real time</div>
+        <div class="title sm">
+          React talks to the model in <span class="green">under a second</span>.
+        </div>
+        <div class="pipe flow">
+          <div class="node"><b>React + Vite</b><span>import · swipe</span></div>
+          <span class="arrow">→</span>
+          <div class="node blue"><b>FastAPI</b><span>/recommend</span></div>
+          <span class="arrow">→</span>
+          <div class="node amber"><b>NCF model</b></div>
+          <span class="arrow">→</span>
+          <div class="node out"><b>Ranked picks</b></div>
+        </div>
+        <div class="note">
+          A thumbs-down appends to your live history and re-ranks instantly,
+          with no retraining.
+        </div>
+      </section>
+
+      <!-- 20 DEMO -->
+      <section class="slide">
+        <div class="kicker">Live MVP</div>
+        <div class="title sm">See it in action.</div>
+        <video class="video" controls preload="metadata" src="demo.mov"></video>
+        <div class="videohint">
+          If it does not play, export <span class="mono">demo.mov</span> to
+          <span class="mono">.mp4</span> (H.264) and update the source.
+        </div>
+      </section>
+
+      <!-- 21 REFLECTION -->
+      <section class="slide">
+        <div class="kicker">Reflection</div>
+        <div class="three">
+          <div>
+            <h4 class="green">Lessons learned</h4>
+            <ul>
+              <li>
+                Collaborative signal beats content; a single profile overfits
+              </li>
+              <li>"Drama" tags half of all films, rank by nearest favorites</li>
+              <li>Honest baselines matter more than one flashy number</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="amber">Known issues</h4>
+            <ul>
+              <li>Cold start: a brand-new viewer sits near their average</li>
+              <li>Embeddings lean to a Letterboxd cinephile cluster</li>
+              <li>Posters hotlink the Letterboxd CDN, a fragile dependency</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="blue">Next steps</h4>
+            <ul>
+              <li>Per-user fine-tuning as a history grows</li>
+              <li>A mainstream-vs-deep-cuts dial</li>
+              <li>Group Blend beyond two people</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 22 THANKS -->
+      <section class="slide">
+        <div class="title wordmark" style="font-size: 60px">Thank you.</div>
+        <div class="lead" style="font-size: 22px">Questions?</div>
+        <div class="credits">
+          Built on open data, <b>MovieLens</b> · <b>samlearner</b> &amp;
+          <b>gsimonx37</b> (Letterboxd) · <b>TMDB</b>.
+        </div>
+      </section>
+    </div>
+
+    <div class="nav">
+      <button id="prev">‹</button><button id="next">›</button>
+    </div>
+    <div class="counter" id="counter">1 / 1</div>
+
+    <script>
+      const slides = [...document.querySelectorAll(".slide")];
+      const counter = document.getElementById("counter");
+      const bar = document.getElementById("bar");
+      let i = 0;
+
+      function buildNet(id, layers) {
+        const svg = document.getElementById(id);
+        if (!svg) return;
+        const W = 760,
+          H = 250,
+          pad = 70;
+        const xs = layers.map(
+          (_, l) => pad + (l * (W - 2 * pad)) / (layers.length - 1),
+        );
+        const pos = layers.map((n, l) =>
+          Array.from({ length: n }, (_, k) => ({
+            x: xs[l],
+            y: (H / (n + 1)) * (k + 1),
+          })),
+        );
+        const NS = "http://www.w3.org/2000/svg";
+        for (let l = 0; l < layers.length - 1; l++)
+          pos[l].forEach((a) =>
+            pos[l + 1].forEach((b) => {
+              const e = document.createElementNS(NS, "line");
+              e.setAttribute("x1", a.x);
+              e.setAttribute("y1", a.y);
+              e.setAttribute("x2", b.x);
+              e.setAttribute("y2", b.y);
+              e.setAttribute("class", "edge");
+              svg.appendChild(e);
+              const s = document.createElementNS(NS, "circle");
+              s.setAttribute("r", 3.2);
+              s.setAttribute("class", "spark");
+              s.style.offsetPath = `path("M ${a.x} ${a.y} L ${b.x} ${b.y}")`;
+              s.style.setProperty("--dur", 1.3 + Math.random() * 0.5 + "s");
+              s.style.animationDelay = l * 0.45 + "s";
+              svg.appendChild(s);
+            }),
+          );
+        const labels = ["u, m, content", "Dense 64", "Dense 32", "rating"];
+        pos.forEach((layer, l) => {
+          layer.forEach((p) => {
+            const c = document.createElementNS(NS, "circle");
+            c.setAttribute("cx", p.x);
+            c.setAttribute("cy", p.y);
+            c.setAttribute("r", 11);
+            c.setAttribute(
+              "class",
+              "node-c" +
+                (l === 0 ? " in" : l === layers.length - 1 ? " out" : ""),
+            );
+            svg.appendChild(c);
+          });
+          const t = document.createElementNS(NS, "text");
+          t.setAttribute("x", xs[l]);
+          t.setAttribute("y", H - 6);
+          t.setAttribute("text-anchor", "middle");
+          t.setAttribute("class", "layerlabel");
+          t.textContent = labels[l] || "";
+          svg.appendChild(t);
+        });
+      }
+      buildNet("net1", [5, 6, 4, 1]);
+
+      function go(n) {
+        i = Math.max(0, Math.min(n, slides.length - 1));
+        slides.forEach((s, k) => s.classList.toggle("active", k === i));
+        counter.textContent = `${i + 1} / ${slides.length}`;
+        bar.style.width = ((i + 1) / slides.length) * 100 + "%";
+      }
+      document.getElementById("prev").onclick = () => go(i - 1);
+      document.getElementById("next").onclick = () => go(i + 1);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") {
+          e.preventDefault();
+          go(i + 1);
+        }
+        if (e.key === "ArrowLeft") go(i - 1);
+        if (e.key === "Home") go(0);
+        if (e.key === "End") go(slides.length - 1);
+        if (e.key === "f" || e.key === "F") {
+          if (!document.fullscreenElement)
+            document.documentElement.requestFullscreen();
+          else document.exitFullscreen();
+        }
+      });
+      go(0);
+    </script>
+  </body>
+</html>

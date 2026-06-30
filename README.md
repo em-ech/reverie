@@ -128,20 +128,31 @@ src/                core library: data prep, model, evaluate, recommend, baselin
   ncf_model.py      collaborative model (user + movie embeddings + content tower)
   ncf_data.py       loaders for the NCF artifacts
   ncf_baselines.py  global / movie / user mean baselines + RMSE
-scripts/            NCF pipeline: build_ncf_dataset, train_ncf, eval_ncf (+ poster/provider caches)
+  ncf_recommend.py  serving seam: rank the modern catalog by your nearest favorites
+scripts/            pipelines: build_ncf_dataset, train_ncf, eval_ncf, build_modern_catalog
 app/                FastAPI service, layered:
   api.py            app factory + router wiring
   routers/          auth, catalog (+ browse), history, watchlist, friends, blend
   services/         recommend, friend, blend, taste, blurb, copy (business logic)
   models.py db.py   SQLAlchemy ORM (User, HistoryItem, WatchlistItem, Friendship) + session
-  enrich.py         movieId -> title/genre/poster/rating/providers (single authority)
+  enrich.py         movieId -> title/genre/poster/rating (single authority; modern or ml-1m)
 web/                React frontend (Vite + Tailwind + shadcn/ui)
 notebooks/          temporal-validation + ncf_collaborative writeups
 experiments/        one-off GRU research scripts (E0, E3, E4, E5, baselines, ablation) — done
+presentation/       the final slide deck (reverie-deck.html, self-contained) + team PDF/PPTX
 artifacts/          trained weights + encoders + NCF artifacts (generated locally, not committed)
 data/               datasets (not committed — see below)
 *.md                plan, architecture, audit, experiment protocol
 ```
+
+## Presentation
+
+The final deck is a self-contained, animated HTML file: open
+[`presentation/reverie-deck.html`](presentation/reverie-deck.html) in a browser, press
+`f` for fullscreen, and use the arrow keys. It explains both models with the course
+concepts, a full system architecture diagram, and the real result graphs. Print to PDF
+(`Cmd+P`) for a static copy, or screen-record / export the animations to GIF for tools
+like Canva.
 
 ## Data (not included)
 
