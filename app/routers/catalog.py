@@ -96,13 +96,13 @@ def _recommend_payload(history: list[tuple[int, float]], n: int) -> dict:
 
 
 def _modern_payload(history: list[tuple[int, float]], n: int) -> dict:
-    """Modern catalog served by the collaborative NCF model (fold-in + item-item)."""
+    """Modern catalog served by the collaborative NCF model (nearest-favorites)."""
     recs = ncf.rank_for_history(history, n=n)
     matches = enrich.match_from_ratings([r for _, r in recs])
-    taste = (
-        ncf.taste_genres(history, lambda mid: enrich.enrich(mid)["genres"])
-        if history else None
-    )
+    genres_of = lambda mid: enrich.enrich(mid)["genres"]
+    # Radar + blurb describe what the model expects you to enjoy next, so derive
+    # them from the recommended films' genres (coherent with the picks shown).
+    taste = ncf.taste_from_movies([mid for mid, _ in recs], genres_of) if recs else None
     return {
         "recommendations": [
             {**enrich.enrich(mid, r), "match": m} for (mid, r), m in zip(recs, matches)

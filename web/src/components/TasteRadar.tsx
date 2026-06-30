@@ -7,20 +7,18 @@ import {
 } from "recharts";
 
 interface Props {
-  taste: Record<string, number>; // mean-centered genre weights (can be negative)
+  taste: Record<string, number>; // genre weights (proportions, >= 0)
 }
 
-// Visualizes the model's derived taste profile. Mean-centered values are
-// min-max rescaled to [0,1] for display, and only the strongest genres shown.
+// Visualizes the taste profile. Values are scaled relative to the strongest
+// genre (top genre = full reach), so a genre that is present but smaller still
+// shows on the web, rather than being flattened to zero by a min-max rescale.
 export function TasteRadar({ taste }: Props) {
   const entries = Object.entries(taste);
   if (!entries.length) return null;
   const top = entries.sort((a, b) => b[1] - a[1]).slice(0, 8);
-  const vals = top.map(([, v]) => v);
-  const lo = Math.min(...vals);
-  const hi = Math.max(...vals);
-  const span = hi - lo || 1;
-  const data = top.map(([genre, v]) => ({ genre, value: (v - lo) / span }));
+  const hi = Math.max(...top.map(([, v]) => v)) || 1;
+  const data = top.map(([genre, v]) => ({ genre, value: v / hi }));
 
   return (
     <div className="rounded-lg border border-border bg-card p-4">
