@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/auth/AuthContext";
 import { RegionProvider } from "@/lib/RegionContext";
 import { ProtectedRoute } from "@/auth/ProtectedRoute";
+import Home from "./pages/Home";
 import BuildHistory from "./pages/BuildHistory";
 import Results from "./pages/Results";
 import Login from "./pages/Login";
@@ -16,7 +17,8 @@ export default function App() {
       <AuthProvider>
         <RegionProvider>
           <Routes>
-            <Route path="/" element={<BuildHistory />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/build" element={<BuildHistory />} />
             <Route path="/results" element={<Results />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

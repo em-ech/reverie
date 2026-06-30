@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sparkles,
   LayoutGrid,
@@ -54,6 +54,9 @@ const GENRES = [
 export default function BuildHistory() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const passedHistory =
+    (location.state as { history?: HistEntry[] })?.history ?? [];
 
   const [view, setView] = useState<ViewMode>(
     (localStorage.getItem(VIEW_KEY) as ViewMode) || "swipe",
@@ -62,7 +65,7 @@ export default function BuildHistory() {
   const [deck, setDeck] = useState<Movie[]>([]);
   const [deckLoading, setDeckLoading] = useState(true);
   const [watchlist, setWatchlist] = useState<Movie[]>([]);
-  const [seen, setSeen] = useState<HistEntry[]>([]);
+  const [seen, setSeen] = useState<HistEntry[]>(passedHistory);
 
   // Refs mirror state so the deck-loading callbacks read fresh values.
   const seenRef = useRef(seen);
