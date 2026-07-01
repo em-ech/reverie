@@ -64,7 +64,7 @@ See [`PROJECT_PLAN.md`](PROJECT_PLAN.md), [`ARCHITECTURE.md`](ARCHITECTURE.md),
 [`AUDIT.md`](AUDIT.md), and [`EXPERIMENTS.md`](EXPERIMENTS.md) for the full design,
 adversarial pre-build review, and experiment protocol.
 
-## Results so far (MovieLens ml-1m, validation)
+## Results (MovieLens ml-1m, validation)
 
 The RNN beats every baseline with non-overlapping 95% confidence intervals and paired
 Wilcoxon p ≈ 0 — including item-kNN, the strong baseline shallow RNNs often lose to.
@@ -81,7 +81,7 @@ full hybrid (genre + rating) wins on MRR (**0.1345**) and is the chosen configur
 it also powers the app's thumbs-down feedback feature. Official test result (3 seeds):
 **HR@10 = 0.242 ± 0.002**.
 
-## Results so far (collaborative model, Letterboxd)
+## Results (collaborative model, Letterboxd)
 
 The collaborative NCF model is a rating regression (1 to 10, loss MSE, reported as RMSE)
 trained on ~9.9M ratings. It beats all three naive baselines on the held-out test set,
