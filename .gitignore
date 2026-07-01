@@ -89,6 +89,9 @@ dist/
 # ============================================================
 presentation/*.mp4
 presentation/anim/
+# Generated HTML reports, kept local only
+presentation/reverie-report.html
+presentation/reverie-report-fr.html
 
 # ============================================================
 # Reverie account store (SQLite) - local user data, never committed
