@@ -14,8 +14,8 @@ import json
 
 import numpy as np
 
-from src.data_prep import pad_histories, pad_ratings
-from src.model import build_hybrid_gru
+from src.gru_model.data_prep import pad_histories, pad_ratings
+from src.gru_model.model import build_hybrid_gru
 
 ART = "artifacts"
 

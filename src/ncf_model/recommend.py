@@ -8,7 +8,7 @@ all watched films (a broad history averages into a mushy centroid that recommend
 generic titles). A mild recency nudge keeps the picks modern. Films map
 tmdb_id <-> Letterboxd slug <-> the model's integer index.
 
-    from src import ncf_recommend as ncf
+    from src.ncf_model import recommend as ncf
     ncf.rank_for_history([(550, 4.5), (27205, 5.0)], n=12, exclude=[550])
 """
 
@@ -19,8 +19,8 @@ import json
 
 import numpy as np
 
-from src.ncf_data import load_features, load_meta
-from src.ncf_model import build_ncf
+from src.ncf_model.data import load_features, load_meta
+from src.ncf_model.model import build_ncf
 
 NCF_DIR = "artifacts/ncf"
 MODERN_DIR = "artifacts/modern"

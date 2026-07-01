@@ -14,8 +14,8 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 import numpy as np
 import tensorflow as tf
 
-from src.ncf_data import load_features, load_meta, load_split
-from src.ncf_model import build_ncf
+from src.ncf_model.data import load_features, load_meta, load_split
+from src.ncf_model.model import build_ncf
 
 
 def main() -> int:

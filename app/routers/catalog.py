@@ -17,9 +17,9 @@ from pydantic import BaseModel
 
 from app import enrich
 from app.services.taste_service import taste_blurb
-from src import importers
-from src import ncf_recommend as ncf
-from src import recommend as rec
+from src.catalog import importers
+from src.ncf_model import recommend as ncf
+from src.gru_model import recommend as rec
 
 router = APIRouter(tags=["catalog"])
 
@@ -138,7 +138,7 @@ def _modern_import(detected: str, raw: bytes, ratings_raw: bytes | None) -> list
     history, recorded at a neutral 3.5. Returns (tmdb_id, stars 0.5-5)."""
     import pandas as pd
 
-    from src.importers import _normalise_title
+    from src.catalog.importers import _normalise_title
 
     index: dict[tuple[str, str], int] = {}
     for mid, m in enrich.titles().items():

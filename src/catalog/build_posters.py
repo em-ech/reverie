@@ -10,7 +10,7 @@ its artifacts are never touched (read-only against movies.dat + movie_to_id).
 Usage
 -----
     conda activate deep-learning
-    TMDB_API_KEY=xxxxxxxx python -m src.build_posters
+    TMDB_API_KEY=xxxxxxxx python -m src.catalog.build_posters
     # resumable: re-run to fill in any movies still missing (e.g. after a 429)
 
 Get a free key at themoviedb.org -> Settings -> API.
@@ -35,7 +35,7 @@ from pathlib import Path
 
 import requests
 
-from src import recommend as rec
+from src.gru_model import recommend as rec
 
 MOVIES_DAT = "data/ml-1m/movies.dat"
 OUT_PATH = "artifacts/posters.json"

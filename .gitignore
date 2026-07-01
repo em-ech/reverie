@@ -85,11 +85,13 @@ dist/
 *.swp
 
 # ============================================================
-# Presentation: keep the deck + GIFs, not the large demo video
+# Presentation: demo.mov is tracked via git-lfs; ignore other large video
 # ============================================================
-presentation/demo.mov
 presentation/*.mp4
 presentation/anim/
+# Generated HTML reports, kept local only
+presentation/reverie-report.html
+presentation/reverie-report-fr.html
 
 # ============================================================
 # Reverie account store (SQLite) - local user data, never committed

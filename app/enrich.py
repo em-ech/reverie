@@ -12,7 +12,7 @@ import math
 from pathlib import Path
 
 from app.config import settings
-from src import recommend as rec
+from src.gru_model import recommend as rec
 
 MOVIES_DAT = "data/ml-1m/movies.dat"
 POSTERS_JSON = "artifacts/posters.json"

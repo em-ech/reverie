@@ -15,10 +15,10 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 import numpy as np
 import keras
 
-from src.data_prep import build_dataset, pad_histories
-from src.model import build_gru
-from src.baselines import most_popular_scores
-from src.evaluate import ranks_from_scores, metrics_from_ranks, bootstrap_ci
+from src.gru_model.data_prep import build_dataset, pad_histories
+from src.gru_model.model import build_gru
+from src.gru_model.baselines import most_popular_scores
+from src.gru_model.evaluate import ranks_from_scores, metrics_from_ranks, bootstrap_ci
 
 RATINGS = "data/ml-1m/ratings.dat"
 SEED = 42

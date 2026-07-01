@@ -30,7 +30,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from src.importers import _normalise_title
+from src.catalog.importers import _normalise_title
 
 NUMERIC = ["year_released", "vote_average", "log_vote_count", "runtime"]
 

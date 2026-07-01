@@ -20,7 +20,7 @@ Once you have answers, you write them down (locked config), and everyone else ca
 
 **Command:**
 ```bash
-python -m src.train
+python -m src.gru_model.train
 ```
 
 **What it does:**
@@ -308,7 +308,7 @@ ls data/ml-1m/
 ### Step 4 — Run the test evaluation
 
 ```bash
-python -m src.run_test
+python -m src.gru_model.run_test
 ```
 
 This will:
@@ -422,7 +422,7 @@ The app needs 3 terminals running at the same time. Always start them in this or
 .venv\Scripts\Activate.ps1
 
 # Run any experiment script from here, e.g.:
-python -m src.train
+python -m src.gru_model.train
 python -m experiments.run_e3
 ```
 **Needs venv:** YES — prompt shows `(reverie)` when active.
@@ -508,7 +508,7 @@ it shows train loss going down while val loss stays tracked, proving no overfitt
 ## Summary Checklist
 
 ```
-[x] Step 0 — python -m src.train            → artifacts/ filled, Em/Cecile unblocked
+[x] Step 0 — python -m src.gru_model.train            → artifacts/ filled, Em/Cecile unblocked
 [x] Step 1 — E3 history sweep               → max_len = 20
 [x] Step 2 — E4 capacity sweep              → embed_dim = 32, rnn_units = 64
 [x] Step 3 — E5 GRU vs LSTM                → cell = "gru"

@@ -32,7 +32,7 @@ import time
 
 import requests
 
-from src.importers import _normalise_title
+from src.catalog.importers import _normalise_title
 
 SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
 DETAILS_URL = "https://api.themoviedb.org/3/movie/{id}"

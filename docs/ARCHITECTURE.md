@@ -15,7 +15,7 @@ reference findings there. Numbers are starting points confirmed by `EXPERIMENTS.
 > `genre_lookup`) concatenated into a small MLP (`Dense(64)`, dropout, `Dense(32)`,
 > dropout, `Dense(1)`), output `= MLP + user_bias + movie_bias + global_mean`. Loss MSE,
 > reported as RMSE. Built by `scripts/build_ncf_dataset.py` / `train_ncf.py` / `eval_ncf.py`; model
-> in `src/ncf_model.py`; writeup in `notebooks/ncf_collaborative.ipynb`.
+> in `src/ncf_model/model.py`; writeup in `notebooks/ncf_collaborative.ipynb`.
 >
 > **Serving / app layer** (also post-submission): the FastAPI service grew a layered
 > structure (`app/routers/*` over `app/services/*` over `app/enrich.py` + SQLAlchemy
@@ -172,7 +172,7 @@ the minimum trained history length so the demo never feeds out-of-distribution s
   `recommend([])`** so cold start never hits the grader. React frontend calls the API.
 - Designate **one training machine + one demo machine**; the frontend owner consumes
   artifacts, never trains. Recorded backup demo is the real fallback, not a checkbox.
-- `recommend(history)` (in `src/recommend.py`) is the **only** inference path; notebooks
+- `recommend(history)` (in `src/gru_model/recommend.py`) is the **only** inference path; notebooks
   import it, never reimplement it `[L2]`. No precomputed/hardcoded predictions.
 - Artifacts contract: `weights.weights.h5`, `model_config.json`, `movie_index.json`,
   `genre_matrix.npy`, `genre_marginal.npy`, `popularity_train.npy`.

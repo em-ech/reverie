@@ -60,8 +60,8 @@ engine, any platform that lives or dies on retention.
   watchlist, rate what you have seen, the deck tunes to each pick), a template taste
   blurb, friends, and a "Blend" that intersects two people's recommendations.
 
-See [`PROJECT_PLAN.md`](PROJECT_PLAN.md), [`ARCHITECTURE.md`](ARCHITECTURE.md),
-[`AUDIT.md`](AUDIT.md), and [`EXPERIMENTS.md`](EXPERIMENTS.md) for the full design,
+See [`PROJECT_PLAN.md`](docs/PROJECT_PLAN.md), [`ARCHITECTURE.md`](docs/ARCHITECTURE.md),
+[`AUDIT.md`](docs/AUDIT.md), and [`EXPERIMENTS.md`](docs/EXPERIMENTS.md) for the full design,
 adversarial pre-build review, and experiment protocol.
 
 ## Results (MovieLens ml-1m, validation)
@@ -122,13 +122,25 @@ explicit masking, and full-catalog ranking metrics with confidence intervals.
 ## Project structure
 
 ```
-src/                core library: data prep, model, evaluate, recommend, baselines, track
-  train.py          GRU training pipeline -> writes artifacts/
-  run_test.py       official GRU test evaluation (frozen config, 3 seeds)
-  ncf_model.py      collaborative model (user + movie embeddings + content tower)
-  ncf_data.py       loaders for the NCF artifacts
-  ncf_baselines.py  global / movie / user mean baselines + RMSE
-  ncf_recommend.py  serving seam: rank the modern catalog by your nearest favorites
+src/                core library, grouped by model family
+  gru_model/        the primary sequence recommender
+    model.py        GRU architecture (build_gru / build_hybrid_gru)
+    data_prep.py    MovieLens clean/encode + sequence-building
+    train.py        GRU training pipeline -> writes artifacts/
+    evaluate.py     ranking metrics + bootstrap CIs
+    baselines.py    popularity / recent-genre / item-kNN baselines
+    recommend.py    inference seam (the only GRU serving path)
+    run_test.py     official GRU test evaluation (frozen config, 3 seeds)
+    data_verify.py  dataset sanity checks; track.py  run logging
+  ncf_model/        collaborative baseline (user + movie embeddings + content tower)
+    model.py        NCF architecture (build_ncf)
+    data.py         loaders for the NCF artifacts
+    baselines.py    global / movie / user mean baselines + RMSE
+    recommend.py    serving seam: rank the modern catalog by your nearest favorites
+  catalog/          shared data + enrichment (used by app and scripts)
+    importers.py    parse Letterboxd + Netflix, normalise/map titles
+    tv_catalog.py   ingest TV catalog, build content embeddings
+    build_posters.py / build_providers.py   TMDB poster + streaming-provider caches
 scripts/            pipelines: build_ncf_dataset, train_ncf, eval_ncf, build_modern_catalog
 app/                FastAPI service, layered:
   api.py            app factory + router wiring
@@ -196,7 +208,7 @@ when you switch.
 pip install -r requirements.txt
 
 # 1. Train the model -> writes artifacts/
-python -m src.train
+python -m src.gru_model.train
 
 # 2. Start the API (Terminal 2)
 uvicorn app.api:app --port 8000

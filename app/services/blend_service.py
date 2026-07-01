@@ -16,8 +16,8 @@ from app.models import User
 from app.services import friend_service as fs
 from app.services.blurb_service import blend_blurb
 from app.services.recommend_service import ordered_history
-from src import ncf_recommend as ncf
-from src import recommend as rec
+from src.ncf_model import recommend as ncf
+from src.gru_model import recommend as rec
 
 BLEND_POOL = 60  # wide per-person pull so the intersection has material
 

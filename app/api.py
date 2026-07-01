@@ -22,8 +22,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import enrich
 from app.db import init_db
 from app.routers import auth, blend, catalog, friends, history, watchlist
-from src import ncf_recommend as ncf
-from src import recommend as rec
+from src.ncf_model import recommend as ncf
+from src.gru_model import recommend as rec
 
 
 @asynccontextmanager

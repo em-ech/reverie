@@ -11,7 +11,7 @@ One-time build step (mirrors build_posters.py); never touches the model.
 Usage
 -----
     conda activate deep-learning
-    TMDB_API_KEY=xxxxxxxx python -m src.build_providers
+    TMDB_API_KEY=xxxxxxxx python -m src.catalog.build_providers
     # resumable: re-run to fill in any movies still missing
 
 Output (artifacts/providers.json), keyed by MovieLens movieId:

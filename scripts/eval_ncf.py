@@ -15,9 +15,9 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 
-from src.ncf_baselines import mae, predict_global, predict_movie, predict_user, rmse
-from src.ncf_data import load_baselines, load_features, load_meta, load_split
-from src.ncf_model import build_ncf
+from src.ncf_model.baselines import mae, predict_global, predict_movie, predict_user, rmse
+from src.ncf_model.data import load_baselines, load_features, load_meta, load_split
+from src.ncf_model.model import build_ncf
 
 LOVE = 8  # rating_val >= 8 on the 1-10 scale == 4 stars
 

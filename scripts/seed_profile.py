@@ -27,7 +27,7 @@ import sys
 
 import requests
 
-from src.importers import _normalise_title
+from src.catalog.importers import _normalise_title
 
 API = "http://localhost:8000"
 DEFAULT_PASSWORD = "reverie-demo"

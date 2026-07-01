@@ -172,7 +172,7 @@ or route to fallback; document the minimum trained history length.
 
 - **L1. Deterministic ordering:** sort by `(timestamp, movieId)`, stable sort, fixed seeds,
   assert no duplicate `(user, movie)` — so all 5 machines produce identical splits.
-- **L2. Notebook/`src` drift:** notebooks import `src/` functions; `src/recommend.py` is the
+- **L2. Notebook/`src` drift:** notebooks import `src/` functions; `src/gru_model/recommend.py` is the
   only inference path.
 - **L3. Letterboxd is unordered:** keep strictly in the qualitative demo; never in a metric.
 - **L4. Sampled-negative eval (E7):** run once as a methodology slide (full-ranking is the

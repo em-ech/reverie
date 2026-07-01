@@ -2,9 +2,9 @@
 
 Run once before training to confirm the pipeline is sound:
 
-    python -m src.data_verify                          # quick check
-    python -m src.data_verify --full                   # full build (slow)
-    python -m src.data_verify --out data/data_notes.md # write the summary doc
+    python -m src.gru_model.data_verify                          # quick check
+    python -m src.gru_model.data_verify --full                   # full build (slow)
+    python -m src.gru_model.data_verify --out data/data_notes.md # write the summary doc
 
 Outputs:
   * Console pass/fail report for each assertion.
@@ -341,7 +341,7 @@ def main() -> None:
 
     if args.full:
         _section("Full dataset build (slow — ~30s on ml-1m)")
-        from src.data_prep import build_dataset
+        from src.gru_model.data_prep import build_dataset
         ds = build_dataset(args.ratings, args.movies)
         _pass(f"build_dataset() succeeded: {ds.n_items} items, "
               f"{len(ds.X_train)} training windows")

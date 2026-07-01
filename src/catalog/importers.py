@@ -13,7 +13,7 @@ PRIVACY RULES (enforced here):
 
 Usage
 -----
-    from src.importers import load_letterboxd, load_netflix
+    from src.catalog.importers import load_letterboxd, load_netflix
 
     # --- Letterboxd ---
     lbx = load_letterboxd("path/to/letterboxd_export/ratings.csv",
@@ -25,7 +25,7 @@ Usage
         viewing_path="path/to/NetflixViewingHistory/ViewingActivity.csv",
         ratings_path="path/to/NetflixRatings/Ratings.csv",   # optional
         movie_to_id=state["movie_to_id"],
-        tv_title_map=tv_title_map,    # from src.tv_catalog.load_tv_catalog()
+        tv_title_map=tv_title_map,    # from src.catalog.tv_catalog.load_tv_catalog()
     )
     # nfx_movies: list[tuple[int, float]]   (movieId, stars) — feeds recommend_movies
     # nfx_tv:     list[tuple[str, float]]   (english_title, stars) — feeds score_tv
